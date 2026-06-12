@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Article — Felix Li</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Archivo:wght@700&family=Space+Grotesk:wght@400;500;600&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #FFFFFF; --bg-footer: #F9FAFA;
+      --text: #09090B; --sub: #64748B; --body: #3F3F46;
+      --accent: #2563EB; --separator: #E4E4E8;
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: 'Space Grotesk', 'Microsoft YaHei', 'PingFang SC', sans-serif;
+      color: var(--text); background: var(--bg);
+      -webkit-font-smoothing: antialiased; line-height: 1.7;
+    }
+
+    .wrapper { max-width: 800px; margin: 0 auto; min-height: 100vh; display: flex; flex-direction: column; }
+
+    /* Header */
+    .header {
+      display: flex; align-items: center; justify-content: space-between;
+      height: 64px; padding: 0 24px; position: sticky; top: 0; z-index: 10; background: var(--bg);
+    }
+    @media (min-width: 640px) { .header { padding: 0 32px; } }
+    .logo {
+      font-family: 'Archivo', sans-serif; font-weight: 700; font-size: 20px;
+    }
+    .logo a { color: var(--text); text-decoration: none; }
+    .back-link { font-size: 13px; color: var(--sub); text-decoration: none; transition: color 0.2s; }
+    .back-link:hover { color: var(--text); }
+
+    /* Article */
+    .article { flex: 1; padding: 24px 24px 80px; }
+    @media (min-width: 640px) { .article { padding: 48px 32px 80px; } }
+
+    .article-header { margin-bottom: 40px; }
+    .article-date { font-size: 14px; color: var(--sub); margin-bottom: 8px; }
+    .article-title {
+      font-family: 'Archivo', sans-serif; font-size: 32px; font-weight: 700;
+      color: var(--text); line-height: 1.25; margin-bottom: 12px;
+    }
+    @media (min-width: 640px) { .article-title { font-size: 40px; } }
+    .article-meta { font-size: 14px; color: var(--sub); display: flex; gap: 16px; }
+
+    /* Article Content */
+    .article-body { font-size: 16px; color: var(--body); }
+    @media (min-width: 640px) { .article-body { font-size: 17px; } }
+    .article-body p { margin-bottom: 1.4em; }
+    .article-body h2 {
+      font-family: 'Archivo', sans-serif; font-size: 22px; font-weight: 700;
+      color: var(--text); margin: 2em 0 0.6em;
+    }
+    .article-body h3 { font-size: 18px; font-weight: 600; color: var(--text); margin: 1.6em 0 0.5em; }
+    .article-body ul, .article-body ol { margin: 0 0 1.4em 1.4em; }
+    .article-body li { margin-bottom: 0.4em; }
+    .article-body strong { color: var(--text); font-weight: 600; }
+    .article-body blockquote {
+      border-left: 3px solid var(--accent); margin: 1.6em 0; padding: 0.5em 0 0.5em 1.2em;
+      color: var(--sub); font-style: italic;
+    }
+    .article-body img {
+      max-width: 100%; height: auto; display: block; margin: 1.6em 0;
+    }
+    .article-body a { color: var(--accent); text-decoration: underline; }
+
+    /* Not found */
+    .not-found {
+      text-align: center; padding: 120px 24px;
+    }
+    .not-found h2 { font-family: 'Archivo', sans-serif; font-size: 24px; margin-bottom: 12px; }
+    .not-found p { color: var(--sub); margin-bottom: 24px; }
+    .not-found a { color: var(--accent); }
+
+    /* Footer */
+    .footer {
+      display: flex; flex-direction: column; gap: 12px; padding: 24px;
+      background: var(--bg-footer); font-size: 13px; color: var(--sub); margin-top: auto;
+    }
+    @media (min-width: 640px) {
+      .footer { flex-direction: row; justify-content: space-between; align-items: center; padding: 32px; }
+    }
+    .footer-links { display: flex; gap: 24px; }
+    .footer-links a { color: var(--sub); text-decoration: none; }
+    .footer-links a:hover { color: var(--text); }
+  </style>
+</head>
+<body>
+<div class="wrapper">
+
+  <div class="header">
+    <span class="logo"><a href="/">Felix</a></span>
+    <a class="back-link" href="/">← Back to Blog</a>
+  </div>
+
+  <div class="article" id="article-container">
+    <div class="article-header">
+      <div class="article-date" id="article-date"></div>
+      <h1 class="article-title" id="article-title"></h1>
+      <div class="article-meta">
+        <span id="article-year"></span>
+        <span id="article-meta"></span>
+      </div>
+    </div>
+    <div class="article-body" id="article-body"></div>
+  </div>
+
+  <div class="not-found hidden" id="not-found">
+    <h2>文章未找到</h2>
+    <p>你正在找的文章可能已经被移动或删除</p>
+    <a href="/">← 返回首页</a>
+  </div>
+
+  <div class="footer">
+    <span>© 2026 Felix Li</span>
+    <div class="footer-links">
+      <a href="/">Photos</a>
+      <a href="/">Blog</a>
+      <a href="https://github.com/felixli2021">GitHub</a>
+    </div>
+  </div>
+
+</div>
+
+<script src="posts-data.js"></script>
+<script>
+(function() {
+  const params = new URLSearchParams(window.location.search);
+  const slug = params.get('slug');
+
+  if (!slug || !window.__POSTS) {
+    showNotFound();
+    return;
+  }
+
+  const post = window.__POSTS.find(p => p.slug === slug);
+  if (!post) {
+    showNotFound();
+    return;
+  }
+
+  document.title = post.title + ' — Felix Li';
+  document.getElementById('article-date').textContent = post.date;
+  document.getElementById('article-title').textContent = post.title;
+  document.getElementById('article-year').textContent = String(post.year);
+  document.getElementById('article-meta').textContent = post.meta;
+  document.getElementById('article-body').innerHTML = post.content;
+
+  function showNotFound() {
+    document.getElementById('article-container').classList.add('hidden');
+    document.getElementById('not-found').classList.remove('hidden');
+  }
+})();
+</script>
+
+</body>
+</html>
