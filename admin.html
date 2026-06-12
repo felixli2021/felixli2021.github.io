@@ -201,6 +201,39 @@
     @keyframes slideUp { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: translateY(0); } }
 
     .hidden { display: none !important; }
+
+    /* ─── Rich Text Editor ─── */
+    .rte-toolbar {
+      display: flex; flex-wrap: wrap; gap: 2px; padding: 8px;
+      background: var(--bg-card); border: 1px solid var(--border);
+      border-bottom: none; border-radius: var(--radius) var(--radius) 0 0;
+    }
+    .rte-toolbar button {
+      width: 32px; height: 32px; border: none; background: transparent;
+      border-radius: 4px; cursor: pointer; font-size: 14px; color: var(--body);
+      display: flex; align-items: center; justify-content: center;
+      font-family: inherit; transition: all 0.15s;
+    }
+    .rte-toolbar button:hover { background: #E4E4E8; }
+    .rte-toolbar button.active { background: var(--accent); color: #fff; }
+    .rte-toolbar .rte-sep { width: 1px; background: var(--border); margin: 4px 6px; }
+    .rte-content {
+      min-height: 360px; padding: 16px; border: 1px solid var(--border);
+      border-top: none; border-radius: 0 0 var(--radius) var(--radius);
+      background: var(--bg); font-size: 15px; line-height: 1.7; color: var(--text);
+      outline: none; overflow-y: auto;
+    }
+    .rte-content:focus { border-color: var(--accent); }
+    .rte-content p { margin-bottom: 0.8em; }
+    .rte-content h2 { font-family: 'Archivo', sans-serif; font-size: 20px; margin: 1.2em 0 0.4em; }
+    .rte-content h3 { font-size: 16px; margin: 1em 0 0.3em; }
+    .rte-content ul, .rte-content ol { margin: 0 0 0.8em 1.4em; }
+    .rte-content blockquote {
+      border-left: 3px solid var(--accent); padding: 0.3em 0 0.3em 1em;
+      color: var(--sub); margin: 0.8em 0;
+    }
+    .rte-content img { max-width: 100%; height: auto; }
+    .rte-content a { color: var(--accent); }
   </style>
 </head>
 <body>
@@ -264,11 +297,31 @@
           <h3 id="articleEditorTitle">新增文章</h3>
           <div class="form-row">
             <div class="form-field"><label>年份</label><select id="aeYear"><option>2026</option><option>2025</option><option>2024</option><option>2023</option></select></div>
-            <div class="form-field"><label>日期</label><input type="text" id="aeDate" placeholder="Jun 15"></div>
+            <div class="form-field"><label>日期 (Mon DD)</label><input type="text" id="aeDate" placeholder="Jun 15"></div>
             <div class="form-field"><label>阅读时长</label><input type="text" id="aeMeta" placeholder="8 min"></div>
           </div>
           <div class="form-row">
+            <div class="form-field"><label>URL 标识 (slug)</label><input type="text" id="aeSlug" placeholder="my-article-slug"></div>
             <div class="form-field"><label>文章标题</label><input type="text" id="aeTitle" placeholder="输入文章标题"></div>
+          </div>
+          <div style="margin-bottom:12px;">
+            <label style="font-size:13px;font-weight:500;color:var(--body);display:block;margin-bottom:4px;">文章正文</label>
+            <div class="rte-toolbar" id="rteToolbar">
+              <button data-cmd="bold" title="加粗 (Ctrl+B)"><b>B</b></button>
+              <button data-cmd="italic" title="斜体 (Ctrl+I)"><i>I</i></button>
+              <span class="rte-sep"></span>
+              <button data-cmd="formatblock" data-val="h2" title="大标题">H2</button>
+              <button data-cmd="formatblock" data-val="h3" title="小标题">H3</button>
+              <span class="rte-sep"></span>
+              <button data-cmd="insertUnorderedList" title="无序列表">≡</button>
+              <button data-cmd="insertOrderedList" title="有序列表">≣</button>
+              <button data-cmd="formatblock" data-val="blockquote" title="引用">❝</button>
+              <span class="rte-sep"></span>
+              <button id="rteLinkBtn" title="插入链接">🔗</button>
+              <button id="rteImageBtn" title="插入图片">🖼</button>
+            </div>
+            <div class="rte-content" id="rteContent" contenteditable="true"><p>在这里开始写文章...</p></div>
+            <input type="file" id="rteImageInput" accept="image/*" style="display:none" onchange="handleRteImageUpload(this.files)">
           </div>
           <div style="display:flex;gap:12px;margin-top:16px;">
             <button class="btn btn-success" onclick="saveArticle()">💾 保存（暂存）</button>
@@ -339,9 +392,11 @@
 const REPO = 'felixli2021/felixli2021.github.io';
 const BRANCH = 'main';
 let token = '';
-let siteData = null;       // parsed index.html data
-let rawHtml = '';          // current raw HTML content
+let siteData = null;       // parsed index.html + posts-data.js data
+let rawHtml = '';          // current raw HTML content (index.html)
 let fileSha = '';          // SHA of index.html on GitHub
+let postsRaw = '';         // current raw content of posts-data.js
+let postsSha = '';         // SHA of posts-data.js on GitHub
 let siteLoaded = false;
 
 // ═══════════════════════════════════════════
@@ -428,17 +483,38 @@ async function fetchSiteData() {
     fileSha = fileInfo.sha;
     rawHtml = base64ToUtf8(fileInfo.content);
 
-    // 2. Also try to check images/ directory
+    // 2. Fetch posts-data.js
+    let postsData = { articles: {} };
+    try {
+      const postsInfo = await ghApi('GET', '/posts-data.js?ref=' + BRANCH);
+      postsSha = postsInfo.sha;
+      postsRaw = base64ToUtf8(postsInfo.content);
+      postsData = parsePostsJs(postsRaw);
+    } catch(e) {
+      // posts-data.js may not exist yet, create from index.html
+      postsSha = '';
+      postsRaw = '';
+      postsData = parsePostsFromHtml(rawHtml);
+    }
+
+    // 3. Also try to check images/ directory
     let imageFiles = [];
     try {
       const imgs = await ghApi('GET', '/images?ref=' + BRANCH);
       imageFiles = Array.isArray(imgs) ? imgs.filter(f => f.type === 'file').map(f => f.name) : [];
     } catch(e) { /* no images dir yet */ }
 
-    // 3. Parse the HTML
-    siteData = parseSiteHtml(rawHtml, imageFiles);
+    // 4. Parse the HTML for photos/about
+    const htmlData = parseSiteHtml(rawHtml, imageFiles);
+    siteData = {
+      hero: htmlData.hero,
+      articles: postsData.articles,
+      photos: htmlData.photos,
+      about: htmlData.about,
+      imageFiles: imageFiles
+    };
 
-    // 4. Render all panels
+    // 5. Render all panels
     renderDashboard();
     renderArticles();
     renderPhotos();
@@ -453,7 +529,6 @@ async function fetchSiteData() {
 function parseSiteHtml(html, imageFiles) {
   const data = {
     hero: { name: 'Felix Li', subtitle: '', desc: '' },
-    articles: {},
     photos: [],
     about: { name: '', subtitle: '', desc: '', bio: '', email: '', github: '' },
     imageFiles: imageFiles || []
@@ -467,27 +542,7 @@ function parseSiteHtml(html, imageFiles) {
   const descMatch = html.match(/<div class="hero-desc">([^<]+)<\/div>/);
   if (descMatch) data.hero.desc = descMatch[1];
 
-  // Parse articles by year
-  const postsSection = html.match(/<div class="posts-section">([\s\S]*?)<\/div>\s*<div class="footer">/);
-  if (postsSection) {
-    const content = postsSection[1];
-    const yearRegex = /<!-- (\d{4}) -->\s*<div class="year-label">\d{4}<\/div>\s*<div class="year-separator"><\/div>\s*([\s\S]*?)(?=<!-- \d{4} -->|$)/g;
-    let match;
-    while ((match = yearRegex.exec(content)) !== null) {
-      const year = match[1];
-      const yearContent = match[2];
-      const articles = [];
-      const postRegex = /<div class="post-item">\s*<span class="post-date">([^<]+)<\/span>\s*<span class="post-title">([^<]+)<\/span>\s*<span class="post-meta">([^<]+)<\/span>\s*<\/div>/g;
-      let pm;
-      while ((pm = postRegex.exec(yearContent)) !== null) {
-        articles.push({ date: pm[1], title: pm[2], meta: pm[3] });
-      }
-      data.articles[year] = articles;
-    }
-  }
-
   // Parse photos (supports both old photo-placeholder and new photo-card format)
-  // First try new format: <div class="photo-card" style="height:NNNpx"><img src="URL".../></div>
   const photoCardRegex = /<div class="photo-card" style="height:(\d+)px">([\s\S]*?)<\/div>\s*(?=<div class="column">|<div class="footer"|<\/div>\s*<\/div>\s*<\/div>\s*<div class="footer"|$)/g;
   let idx = 0;
   let match;
@@ -528,13 +583,88 @@ function parseSiteHtml(html, imageFiles) {
   if (bioMatch) data.about.bio = bioMatch[1].trim();
   const emailMatch = html.match(/<a class="contact-link" href="mailto:([^"]+)">/);
   if (emailMatch) data.about.email = emailMatch[1];
-  const ghMatch = html.match(/<a href="#">GitHub<\/a>/);
-  // Parse about hero from photos page
   const aboutSub = html.match(/<div class="hero-subtitle">([^<]+)<\/div>/);
   if (aboutSub) data.about.subtitle = aboutSub[1];
   const aboutDesc = html.match(/<div class="hero-desc">([^<]+)<\/div>/);
   if (aboutDesc) data.about.desc = aboutDesc[1];
 
+  return data;
+}
+
+// Parse posts from posts-data.js content
+function parsePostsJs(raw) {
+  const data = { articles: {} };
+  try {
+    // Extract JSON array from the JS file
+    const jsonMatch = raw.match(/window\.__POSTS\s*=\s*(\[[\s\S]*\])\s*;?\s*$/);
+    if (!jsonMatch) return data;
+    const posts = JSON.parse(jsonMatch[1]);
+    posts.forEach(p => {
+      const year = String(p.year || new Date().getFullYear());
+      if (!data.articles[year]) data.articles[year] = [];
+      data.articles[year].push({
+        date: p.date,
+        title: p.title,
+        meta: p.meta,
+        slug: p.slug,
+        content: p.content
+      });
+    });
+  } catch(e) {
+    console.error('Failed to parse posts-data.js:', e);
+  }
+  return data;
+}
+
+// Fallback: parse articles from index.html (old format)
+function parsePostsFromHtml(html) {
+  const data = { articles: {} };
+  const postsSection = html.match(/<div class="posts-section">([\s\S]*?)<\/div>\s*<div class="footer">/);
+  if (postsSection) {
+    const content = postsSection[1];
+    // New link format
+    const linkRegex = /<a class="post-link" href="article\.html\?slug=([^"]+)">\s*<span class="post-date">([^<]+)<\/span>\s*<span class="post-title">([^<]+)<\/span>\s*<span class="post-meta">([^<]+)<\/span>\s*<\/a>/g;
+    let match;
+    // Find which year each post belongs to
+    const yearRegex = /<div class="year-label">(\d{4})<\/div>/g;
+    let years = [];
+    let ym;
+    while ((ym = yearRegex.exec(content)) !== null) years.push(ym[1]);
+    
+    let yi = 0;
+    let prevIdx = 0;
+    while ((match = linkRegex.exec(content)) !== null) {
+      // Determine which year this post belongs to
+      while (yi < years.length - 1 && match.index > content.indexOf('<div class="year-label">' + years[yi+1], prevIdx)) {
+        yi++;
+      }
+      const year = years[yi] || '2026';
+      if (!data.articles[year]) data.articles[year] = [];
+      data.articles[year].push({
+        date: match[2], title: match[3], meta: match[4],
+        slug: match[1], content: '<p>（从旧格式迁移，请编辑补充内容）</p>'
+      });
+    }
+
+    // Fallback: old span format (no links)
+    if (Object.keys(data.articles).every(y => data.articles[y].length === 0)) {
+      const oldYearRegex = /<!-- (\d{4}) -->\s*<div class="year-label">\d{4}<\/div>\s*<div class="year-separator"><\/div>\s*([\s\S]*?)(?=<!-- \d{4} -->|$)/g;
+      while ((match = oldYearRegex.exec(content)) !== null) {
+        const year = match[1];
+        const yearContent = match[2];
+        const articles = [];
+        const postRegex = /<div class="post-item">\s*<span class="post-date">([^<]+)<\/span>\s*<span class="post-title">([^<]+)<\/span>\s*<span class="post-meta">([^<]+)<\/span>\s*<\/div>/g;
+        let pm;
+        while ((pm = postRegex.exec(yearContent)) !== null) {
+          articles.push({
+            date: pm[1], title: pm[2], meta: pm[3],
+            slug: slugify(pm[2]), content: '<p>（从旧格式迁移，请编辑补充内容）</p>'
+          });
+        }
+        data.articles[year] = articles;
+      }
+    }
+  }
   return data;
 }
 
@@ -581,11 +711,13 @@ function renderArticles() {
       html += '<div style="font-size:13px;color:var(--sub);padding:8px 0;">暂无文章</div>';
     } else {
       articles.forEach((a, i) => {
+        const hasContent = a.content && a.content.length > 50 && a.content !== '<p>（从旧格式迁移，请编辑补充内容）</p>';
         html += `<div class="article-row">
           <span class="a-year">${year}</span>
           <span class="a-date">${a.date}</span>
-          <span class="a-title">${a.title}</span>
+          <span class="a-title">${a.title}${hasContent ? '' : ' <span style="color:#DC2626;font-size:11px;">[无正文]</span>'}</span>
           <span class="a-meta">${a.meta}</span>
+          <span style="font-size:11px;color:var(--sub);">${a.slug || '无slug'}</span>
           <span class="a-actions">
             <button class="btn btn-outline btn-sm" onclick="editArticle('${year}', ${i})">✏️</button>
             <button class="btn btn-danger btn-sm" onclick="deleteArticle('${year}', ${i})">🗑</button>
@@ -606,8 +738,17 @@ function showArticleEditor() {
   document.getElementById('aeDate').value = '';
   document.getElementById('aeTitle').value = '';
   document.getElementById('aeMeta').value = '';
+  document.getElementById('aeSlug').value = '';
+  document.getElementById('rteContent').innerHTML = '<p>在这里开始写文章...</p>';
   document.getElementById('aeEditIdx').value = '-1';
   document.getElementById('aeEditYear').value = '';
+  // Auto-generate slug on title input
+  document.getElementById('aeTitle').oninput = function() {
+    if (!document.getElementById('aeEditIdx').value || document.getElementById('aeEditIdx').value === '-1') {
+      const s = slugify(this.value);
+      if (s) document.getElementById('aeSlug').value = s;
+    }
+  };
 }
 
 function editArticle(year, idx) {
@@ -618,8 +759,11 @@ function editArticle(year, idx) {
   document.getElementById('aeDate').value = article.date;
   document.getElementById('aeTitle').value = article.title;
   document.getElementById('aeMeta').value = article.meta;
+  document.getElementById('aeSlug').value = article.slug || slugify(article.title);
+  document.getElementById('rteContent').innerHTML = article.content || '<p>在这里开始写文章...</p>';
   document.getElementById('aeEditIdx').value = idx;
   document.getElementById('aeEditYear').value = year;
+  document.getElementById('aeTitle').oninput = null;
 }
 
 function saveArticle() {
@@ -627,10 +771,17 @@ function saveArticle() {
   const date = document.getElementById('aeDate').value.trim();
   const title = document.getElementById('aeTitle').value.trim();
   const meta = document.getElementById('aeMeta').value.trim();
+  const slug = document.getElementById('aeSlug').value.trim() || slugify(title);
+  const content = document.getElementById('rteContent').innerHTML.trim();
   const editIdx = parseInt(document.getElementById('aeEditIdx').value);
   const editYear = document.getElementById('aeEditYear').value;
 
   if (!date || !title || !meta) { alert('请填写完整信息'); return; }
+  if (content === '<p>在这里开始写文章...</p>' || content === '<p><br></p>' || content === '') {
+    if (!confirm('文章正文为空，确定保存？')) return;
+  }
+
+  const articleObj = { date, title, meta, slug, content };
 
   // Ensure year exists in data
   if (!siteData.articles[year]) siteData.articles[year] = [];
@@ -638,15 +789,15 @@ function saveArticle() {
   if (editIdx >= 0 && editYear) {
     // Editing existing — remove from old year first
     if (editYear === year) {
-      siteData.articles[year][editIdx] = { date, title, meta };
+      siteData.articles[year][editIdx] = articleObj;
     } else {
       siteData.articles[editYear].splice(editIdx, 1);
-      siteData.articles[year].push({ date, title, meta });
+      siteData.articles[year].push(articleObj);
       if (siteData.articles[editYear].length === 0) delete siteData.articles[editYear];
     }
   } else {
     // New article
-    siteData.articles[year].push({ date, title, meta });
+    siteData.articles[year].push(articleObj);
   }
 
   renderArticles();
@@ -669,6 +820,8 @@ function cancelArticleEdit() {
   document.getElementById('aeDate').value = '';
   document.getElementById('aeTitle').value = '';
   document.getElementById('aeMeta').value = '';
+  document.getElementById('aeSlug').value = '';
+  document.getElementById('rteContent').innerHTML = '<p>在这里开始写文章...</p>';
   document.getElementById('aeEditIdx').value = '-1';
   document.getElementById('aeEditYear').value = '';
 }
@@ -808,9 +961,9 @@ function regenerateHTML() {
   let postsHtml = '';
   const years = Object.keys(siteData.articles).sort((a, b) => b - a);
   years.forEach(year => {
-    postsHtml += `\n      <!-- ${year} -->\n      <div class="year-label">${year}</div>\n      <div class="year-separator"></div>`;
+    postsHtml += `\n      <div class="year-label">${year}</div>\n      <div class="year-separator"></div>`;
     siteData.articles[year].forEach(a => {
-      postsHtml += `\n      <div class="post-item">\n        <span class="post-date">${escHtml(a.date)}</span>\n        <span class="post-title">${escHtml(a.title)}</span>\n        <span class="post-meta">${escHtml(a.meta)}</span>\n      </div>`;
+      postsHtml += `\n      <div class="post-item">\n        <a class="post-link" href="article.html?slug=${escAttr(a.slug || slugify(a.title))}">\n          <span class="post-date">${escHtml(a.date)}</span>\n          <span class="post-title">${escHtml(a.title)}</span>\n          <span class="post-meta">${escHtml(a.meta)}</span>\n        </a>\n      </div>`;
     });
     postsHtml += '\n';
   });
@@ -872,6 +1025,45 @@ function escHtml(s) {
   return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
 }
 
+function escAttr(s) {
+  return String(s).replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/'/g,'&#39;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+
+function slugify(text) {
+  return String(text || '')
+    .toLowerCase()
+    .replace(/[^\w\s-]/g, '')
+    .replace(/[\s_]+/g, '-')
+    .replace(/-+/g, '-')
+    .replace(/^-|-$/g, '')
+    .substring(0, 80);
+}
+
+// Generate posts-data.js content from current article data
+function regeneratePostsJs() {
+  const allPosts = [];
+  const years = Object.keys(siteData.articles).sort((a, b) => b - a);
+  years.forEach(year => {
+    siteData.articles[year].forEach(a => {
+      allPosts.push({
+        slug: a.slug || slugify(a.title),
+        title: a.title,
+        date: a.date,
+        year: parseInt(year),
+        meta: a.meta,
+        content: a.content || '<p>（编辑中...）</p>'
+      });
+    });
+  });
+
+  return `// ═══════════════════════════════════════════
+// Felix Blog — 文章数据存储
+// 每篇文章包含：slug(URL标识)、标题、日期、年份、阅读时长、正文HTML
+// ═══════════════════════════════════════════
+window.__POSTS = ${JSON.stringify(allPosts, null, 2)};
+`;
+}
+
 // ═══════════════════════════════════════════
 // PUBLISH
 // ═══════════════════════════════════════════
@@ -889,19 +1081,32 @@ async function publishSite() {
   setStatus('发布中...', 'info');
   try {
     const newHtml = regenerateHTML();
-    const base64 = utf8ToBase64(newHtml);
+    const newPostsJs = regeneratePostsJs();
+    const base64Html = utf8ToBase64(newHtml);
+    const base64Posts = utf8ToBase64(newPostsJs);
 
-    await ghApi('PUT', '/index.html', {
+    // Push index.html
+    const idxResult = await ghApi('PUT', '/index.html', {
       message: 'Update blog content via admin panel',
-      content: base64,
+      content: base64Html,
       sha: fileSha,
       branch: BRANCH
     });
 
+    // Push posts-data.js
+    const postsOpts = {
+      message: 'Update posts data via admin panel',
+      content: base64Posts,
+      branch: BRANCH
+    };
+    if (postsSha) postsOpts.sha = postsSha;
+    const postsResult = await ghApi('PUT', '/posts-data.js', postsOpts);
+
     // Update local state
     rawHtml = newHtml;
-    const fileInfo = await ghApi('GET', '/index.html?ref=' + BRANCH);
-    fileSha = fileInfo.sha;
+    postsRaw = newPostsJs;
+    fileSha = idxResult.content.sha;
+    postsSha = postsResult.content.sha;
 
     setStatus('发布成功！网站已更新 → felixli2021.github.io', 'success');
     toast('发布成功！稍等约1分钟刷新网站即可看到更新');
@@ -940,6 +1145,121 @@ function toast(msg, type) {
     handlePhotoUpload(e.dataTransfer.files);
   });
 })();
+
+// ═══════════════════════════════════════════
+// RICH TEXT EDITOR
+// ═══════════════════════════════════════════
+(function() {
+  const toolbar = document.getElementById('rteToolbar');
+  const editor = document.getElementById('rteContent');
+  if (!toolbar || !editor) return;
+
+  // Toolbar button clicks
+  toolbar.addEventListener('click', (e) => {
+    const btn = e.target.closest('button');
+    if (!btn) return;
+    e.preventDefault();
+
+    const cmd = btn.dataset.cmd;
+    const val = btn.dataset.val || null;
+
+    if (cmd === 'formatblock') {
+      document.execCommand('formatBlock', false, val);
+    } else if (cmd) {
+      document.execCommand(cmd, false, val);
+    }
+    editor.focus();
+    updateToolbarState();
+  });
+
+  // Link button
+  document.getElementById('rteLinkBtn').addEventListener('click', (e) => {
+    e.preventDefault();
+    const sel = window.getSelection();
+    if (sel.rangeCount === 0) return;
+
+    const url = prompt('输入链接地址（https://...）：', 'https://');
+    if (url) {
+      document.execCommand('createLink', false, url);
+    }
+    editor.focus();
+  });
+
+  // Image button — upload to GitHub and insert
+  document.getElementById('rteImageBtn').addEventListener('click', (e) => {
+    e.preventDefault();
+    document.getElementById('rteImageInput').click();
+  });
+
+  // Update toolbar active state on selection change
+  document.addEventListener('selectionchange', () => {
+    if (document.activeElement === editor || editor.contains(document.activeElement)) {
+      updateToolbarState();
+    }
+  });
+
+  editor.addEventListener('keyup', updateToolbarState);
+  editor.addEventListener('mouseup', updateToolbarState);
+
+  function updateToolbarState() {
+    toolbar.querySelectorAll('button[data-cmd]').forEach(btn => {
+      const cmd = btn.dataset.cmd;
+      if (cmd === 'formatblock') {
+        const val = btn.dataset.val;
+        const active = document.queryCommandValue('formatBlock').toLowerCase() === val;
+        btn.classList.toggle('active', active);
+      } else {
+        btn.classList.toggle('active', document.queryCommandState(cmd));
+      }
+    });
+  }
+
+  // Paste image support
+  editor.addEventListener('paste', (e) => {
+    const items = e.clipboardData && e.clipboardData.items;
+    if (!items) return;
+    for (const item of items) {
+      if (item.type.startsWith('image/')) {
+        e.preventDefault();
+        handleRteImageUpload([item.getAsFile()]);
+        return;
+      }
+    }
+  });
+})();
+
+// RTE image upload handler
+async function handleRteImageUpload(files) {
+  if (!files || files.length === 0) return;
+  const editor = document.getElementById('rteContent');
+  setStatus('上传文章中图片...', 'info');
+
+  for (const file of files) {
+    try {
+      const compressed = await compressImage(file, 2400, 0.92);
+      const base64 = compressed.split(',')[1];
+      const ext = file.name.split('.').pop().toLowerCase() || 'jpg';
+      const fileName = `images/post-${Date.now()}-${Math.random().toString(36).slice(2,6)}.${ext}`;
+
+      await ghApi('PUT', `/${fileName}`, {
+        message: `Upload post image: ${file.name}`,
+        content: base64,
+        branch: BRANCH
+      });
+
+      const rawUrl = `https://raw.githubusercontent.com/${REPO}/${BRANCH}/${fileName}`;
+
+      // Insert image at cursor
+      editor.focus();
+      document.execCommand('insertImage', false, rawUrl);
+
+      toast('图片已插入文章');
+    } catch(e) {
+      toast('图片上传失败: ' + e.message, 'error');
+    }
+  }
+  setStatus('准备就绪 — 修改后点击发布同步到网站', 'info');
+}
 </script>
 
 </body>
