@@ -1,0 +1,925 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>博客后台 — Felix Li</title>
+  <link href="https://fonts.googleapis.com/css2?family=Archivo:wght@700&family=Space+Grotesk:wght@400;500;600&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #FFFFFF; --bg-card: #FAFAFA; --bg-footer: #F9FAFA;
+      --text: #09090B; --sub: #64748B; --body: #3F3F46;
+      --accent: #2563EB; --danger: #DC2626; --success: #16A34A;
+      --border: #E4E4E8;
+      --radius: 6px;
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: 'Space Grotesk', 'Microsoft YaHei', sans-serif;
+      background: #F5F5F5; color: var(--text);
+      min-height: 100vh; line-height: 1.5;
+    }
+
+    /* ─── Login Screen ─── */
+    .login-screen {
+      display: flex; align-items: center; justify-content: center;
+      min-height: 100vh; padding: 24px;
+    }
+    .login-card {
+      background: var(--bg); border-radius: 12px; padding: 48px 40px;
+      width: 100%; max-width: 420px; box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+    }
+    .login-card h1 {
+      font-family: 'Archivo', sans-serif; font-size: 24px; margin-bottom: 4px;
+    }
+    .login-card p { font-size: 14px; color: var(--sub); margin-bottom: 32px; }
+    .login-card label {
+      display: block; font-size: 13px; font-weight: 600; margin-bottom: 6px;
+      color: var(--body);
+    }
+    .login-card input {
+      width: 100%; padding: 10px 14px; border: 1px solid var(--border);
+      border-radius: var(--radius); font-size: 14px; font-family: inherit;
+      outline: none; transition: border-color 0.2s;
+    }
+    .login-card input:focus { border-color: var(--accent); }
+    .form-group { margin-bottom: 20px; }
+    .login-card .hint { font-size: 12px; color: var(--sub); margin-top: 4px; }
+    .login-card .error { font-size: 13px; color: var(--danger); margin-top: 12px; display: none; }
+    .btn {
+      display: inline-flex; align-items: center; gap: 8px;
+      padding: 10px 20px; border: none; border-radius: var(--radius);
+      font-size: 14px; font-weight: 500; font-family: inherit;
+      cursor: pointer; transition: all 0.2s;
+    }
+    .btn-primary { background: var(--accent); color: #fff; width: 100%; justify-content: center; }
+    .btn-primary:hover { background: #1D4ED8; }
+    .btn-outline { background: var(--bg); color: var(--text); border: 1px solid var(--border); }
+    .btn-outline:hover { background: var(--bg-card); }
+    .btn-danger { background: var(--danger); color: #fff; }
+    .btn-danger:hover { background: #B91C1C; }
+    .btn-success { background: var(--success); color: #fff; }
+    .btn-sm { padding: 6px 14px; font-size: 13px; }
+
+    /* ─── Dashboard ─── */
+    .dashboard { display: none; }
+    .dashboard.active { display: flex; flex-direction: column; min-height: 100vh; }
+
+    .topbar {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 0 24px; height: 56px; background: var(--bg);
+      border-bottom: 1px solid var(--border); position: sticky; top: 0; z-index: 10;
+    }
+    .topbar .logo {
+      font-family: 'Archivo', sans-serif; font-weight: 700; font-size: 18px;
+    }
+    .topbar .logout { font-size: 13px; color: var(--sub); cursor: pointer; }
+    .topbar .logout:hover { color: var(--text); }
+
+    .main {
+      display: flex; flex-direction: column; flex: 1;
+    }
+    @media (min-width: 768px) { .main { flex-direction: row; } }
+
+    .tabs {
+      display: flex; flex-wrap: wrap; gap: 4px; padding: 16px 24px;
+      background: var(--bg); border-bottom: 1px solid var(--border);
+    }
+    @media (min-width: 768px) {
+      .tabs {
+        flex-direction: column; width: 200px; flex-shrink: 0; padding: 24px 16px;
+        border-bottom: none; border-right: 1px solid var(--border); gap: 2px;
+      }
+    }
+    .tab {
+      padding: 8px 16px; border-radius: var(--radius); font-size: 14px; color: var(--sub);
+      cursor: pointer; transition: all 0.2s; border: none; background: none;
+      font-family: inherit; text-align: left; white-space: nowrap;
+    }
+    .tab:hover { color: var(--text); background: var(--bg-card); }
+    .tab.active { color: var(--accent); background: #EFF6FF; font-weight: 500; }
+
+    .content {
+      flex: 1; padding: 24px; overflow-y: auto;
+    }
+
+    .panel { display: none; }
+    .panel.active { display: block; }
+
+    .panel h2 {
+      font-family: 'Archivo', sans-serif; font-size: 22px; margin-bottom: 24px;
+    }
+
+    /* ─── Stats ─── */
+    .stat-grid {
+      display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 16px; margin-bottom: 24px;
+    }
+    .stat-card {
+      background: var(--bg); border-radius: var(--radius); padding: 20px;
+      border: 1px solid var(--border);
+    }
+    .stat-card .stat-num { font-family: 'Archivo', sans-serif; font-size: 28px; }
+    .stat-card .stat-label { font-size: 13px; color: var(--sub); margin-top: 4px; }
+
+    /* ─── Article List ─── */
+    .toolbar { display: flex; gap: 12px; margin-bottom: 20px; flex-wrap: wrap; }
+    .article-list { display: flex; flex-direction: column; gap: 8px; margin-bottom: 32px; }
+    .article-row {
+      display: flex; align-items: center; gap: 12px; padding: 12px 16px;
+      background: var(--bg); border: 1px solid var(--border); border-radius: var(--radius);
+      flex-wrap: wrap;
+    }
+    .article-row .a-year { font-size: 12px; color: var(--sub); background: var(--bg-card); padding: 2px 8px; border-radius: 4px; }
+    .article-row .a-date { font-size: 13px; color: var(--sub); min-width: 70px; }
+    .article-row .a-title { flex: 1; font-weight: 500; font-size: 14px; min-width: 120px; }
+    .article-row .a-meta { font-size: 12px; color: var(--sub); }
+    .article-row .a-actions { display: flex; gap: 8px; }
+
+    /* ─── Forms ─── */
+    .editor-card {
+      background: var(--bg); border: 1px solid var(--border); border-radius: var(--radius);
+      padding: 24px; margin-bottom: 24px;
+    }
+    .editor-card h3 { font-size: 16px; margin-bottom: 20px; }
+    .form-row { display: flex; gap: 16px; flex-wrap: wrap; margin-bottom: 16px; }
+    .form-field { flex: 1; min-width: 180px; }
+    .form-field label { display: block; font-size: 13px; font-weight: 500; color: var(--body); margin-bottom: 4px; }
+    .form-field input, .form-field textarea, .form-field select {
+      width: 100%; padding: 10px 14px; border: 1px solid var(--border);
+      border-radius: var(--radius); font-size: 14px; font-family: inherit;
+      outline: none; transition: border-color 0.2s;
+    }
+    .form-field input:focus, .form-field textarea:focus, .form-field select:focus { border-color: var(--accent); }
+    .form-field textarea { resize: vertical; min-height: 100px; }
+
+    /* ─── Photo Grid ─── */
+    .photo-grid {
+      display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 16px;
+      margin-bottom: 24px;
+    }
+    .photo-card {
+      background: var(--bg); border: 1px solid var(--border); border-radius: var(--radius);
+      overflow: hidden; position: relative;
+    }
+    .photo-card .img-wrap {
+      height: 200px; display: flex; align-items: center; justify-content: center;
+      color: var(--sub); font-size: 13px; position: relative;
+      cursor: pointer; transition: opacity 0.2s;
+    }
+    .photo-card .img-wrap:hover { opacity: 0.8; }
+    .photo-card .info {
+      padding: 10px 14px; display: flex; align-items: center; justify-content: space-between;
+    }
+    .photo-card .info .idx { font-size: 12px; color: var(--sub); }
+    .photo-upload-zone {
+      border: 2px dashed var(--border); border-radius: var(--radius);
+      padding: 40px; text-align: center; color: var(--sub); cursor: pointer;
+      transition: all 0.2s; background: var(--bg);
+    }
+    .photo-upload-zone:hover { border-color: var(--accent); color: var(--accent); }
+    .photo-upload-zone input { display: none; }
+
+    /* ─── Publish Bar ─── */
+    .publish-bar {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 12px 24px; background: var(--bg); border-top: 1px solid var(--border);
+      position: sticky; bottom: 0; flex-wrap: wrap; gap: 12px;
+    }
+    .publish-bar .status { font-size: 13px; }
+    .publish-bar .status.success { color: var(--success); }
+    .publish-bar .status.error { color: var(--danger); }
+    .publish-bar .status.info { color: var(--sub); }
+
+    /* ─── Toast ─── */
+    .toast {
+      position: fixed; bottom: 80px; right: 24px; padding: 12px 20px;
+      border-radius: var(--radius); font-size: 14px; color: #fff; z-index: 1000;
+      animation: slideUp 0.3s ease; pointer-events: none;
+    }
+    .toast.success { background: var(--success); }
+    .toast.error { background: var(--danger); }
+    @keyframes slideUp { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: translateY(0); } }
+
+    .hidden { display: none !important; }
+  </style>
+</head>
+<body>
+
+<!-- ═══════════ LOGIN ═══════════ -->
+<div class="login-screen" id="loginScreen">
+  <div class="login-card">
+    <h1>博客后台管理</h1>
+    <p>登录以管理你的博客内容</p>
+    <div class="form-group">
+      <label>GitHub Token</label>
+      <input type="password" id="tokenInput" placeholder="ghp_xxxxxxxxxxxxxxxxxxxxxx" autocomplete="off">
+      <div class="hint">需要 repo 权限的 Personal Access Token</div>
+    </div>
+    <div class="form-group">
+      <label>管理密码（自己设，4位以上）</label>
+      <input type="password" id="pwdInput" placeholder="下次打开只需输入这个密码" autocomplete="off">
+      <div class="hint">首次设置密码，用于下次快速登录</div>
+    </div>
+    <button class="btn btn-primary" id="loginBtn" onclick="doLogin()">登 录</button>
+    <div class="error" id="loginError"></div>
+  </div>
+</div>
+
+<!-- ═══════════ DASHBOARD ═══════════ -->
+<div class="dashboard" id="dashboard">
+  <div class="topbar">
+    <span class="logo">Felix Blog Admin</span>
+    <span class="logout" onclick="doLogout()">退出登录</span>
+  </div>
+  <div class="main">
+    <div class="tabs">
+      <button class="tab active" onclick="switchPanel('dashboard')">📊 概览</button>
+      <button class="tab" onclick="switchPanel('articles')">📝 文章管理</button>
+      <button class="tab" onclick="switchPanel('photos')">🖼 照片管理</button>
+      <button class="tab" onclick="switchPanel('about')">👤 关于我</button>
+    </div>
+    <div class="content">
+
+      <!-- Dashboard Panel -->
+      <div class="panel active" id="panel-dashboard">
+        <h2>网站概览</h2>
+        <div class="stat-grid">
+          <div class="stat-card"><div class="stat-num" id="statArticles">-</div><div class="stat-label">文章总数</div></div>
+          <div class="stat-card"><div class="stat-num" id="statPhotos">-</div><div class="stat-label">照片数量</div></div>
+          <div class="stat-card"><div class="stat-num" id="statLastUpdate">-</div><div class="stat-label">最近更新</div></div>
+        </div>
+        <button class="btn btn-primary" onclick="fetchSiteData()">🔄 刷新数据</button>
+      </div>
+
+      <!-- Articles Panel -->
+      <div class="panel" id="panel-articles">
+        <h2>文章管理</h2>
+        <div class="toolbar">
+          <button class="btn btn-primary" onclick="showArticleEditor()">+ 新增文章</button>
+          <button class="btn btn-outline btn-sm" onclick="fetchSiteData()">🔄 刷新</button>
+        </div>
+        <div class="article-list" id="articleList"></div>
+
+        <div class="editor-card hidden" id="articleEditor">
+          <h3 id="articleEditorTitle">新增文章</h3>
+          <div class="form-row">
+            <div class="form-field"><label>年份</label><select id="aeYear"><option>2026</option><option>2025</option><option>2024</option><option>2023</option></select></div>
+            <div class="form-field"><label>日期</label><input type="text" id="aeDate" placeholder="Jun 15"></div>
+            <div class="form-field"><label>阅读时长</label><input type="text" id="aeMeta" placeholder="8 min"></div>
+          </div>
+          <div class="form-row">
+            <div class="form-field"><label>文章标题</label><input type="text" id="aeTitle" placeholder="输入文章标题"></div>
+          </div>
+          <div style="display:flex;gap:12px;margin-top:16px;">
+            <button class="btn btn-success" onclick="saveArticle()">💾 保存（暂存）</button>
+            <button class="btn btn-outline btn-sm" onclick="cancelArticleEdit()">取消</button>
+          </div>
+          <input type="hidden" id="aeEditIdx" value="-1">
+          <input type="hidden" id="aeEditYear" value="">
+        </div>
+      </div>
+
+      <!-- Photos Panel -->
+      <div class="panel" id="panel-photos">
+        <h2>照片管理</h2>
+        <div class="toolbar">
+          <button class="btn btn-primary" onclick="document.getElementById('photoInput').click()">+ 上传新照片</button>
+          <button class="btn btn-outline btn-sm" onclick="fetchSiteData()">🔄 刷新</button>
+        </div>
+        <div class="photo-grid" id="photoGrid"></div>
+
+        <label class="photo-upload-zone" id="photoDropZone">
+          <div>📁 点击或拖拽上传照片</div>
+          <div style="font-size:12px;margin-top:8px;">支持 JPG / PNG / WebP，自动压缩至合适大小</div>
+          <input type="file" id="photoInput" accept="image/*" multiple onchange="handlePhotoUpload(this.files)">
+        </label>
+      </div>
+
+      <!-- About Panel -->
+      <div class="panel" id="panel-about">
+        <h2>关于我</h2>
+        <div class="editor-card">
+          <h3>个人信息</h3>
+          <div class="form-row">
+            <div class="form-field"><label>姓名</label><input type="text" id="aboutName" value="Felix Li"></div>
+            <div class="form-field"><label>副标题</label><input type="text" id="aboutSubtitle" value="Photography · Wuhan, China"></div>
+          </div>
+          <div class="form-row">
+            <div class="form-field"><label>英文简介</label><input type="text" id="aboutDesc" value="A personal photography collection and blog. Capturing moments, places, and stories through the lens."></div>
+          </div>
+          <div class="form-row">
+            <div class="form-field"><label>中文简介</label><textarea id="aboutBio" rows="4">我是 Felix，住在武汉的摄影爱好者。白天是软件工程师，夜晚和周末拿着相机在城市里游荡。这个站点是我记录照片和思考的地方。
+
+器材：Sony A7R5 + 35mm f/1.4</textarea></div>
+          </div>
+          <div class="form-row">
+            <div class="form-field"><label>联系邮箱</label><input type="text" id="aboutEmail" value="felix@felixli.com"></div>
+            <div class="form-field"><label>GitHub 用户名</label><input type="text" id="aboutGitHub" value="felixli2021"></div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- Publish Bar -->
+  <div class="publish-bar">
+    <span class="status info" id="publishStatus">准备就绪 — 修改后点击发布同步到网站</span>
+    <div style="display:flex;gap:12px;">
+      <button class="btn btn-outline" onclick="previewSite()">🔍 预览当前状态</button>
+      <button class="btn btn-primary" onclick="publishSite()">🚀 发布到网站</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ═══════════════════════════════════════════
+// GLOBAL STATE
+// ═══════════════════════════════════════════
+const REPO = 'felixli2021/felixli2021.github.io';
+const BRANCH = 'main';
+let token = '';
+let siteData = null;       // parsed index.html data
+let rawHtml = '';          // current raw HTML content
+let fileSha = '';          // SHA of index.html on GitHub
+let siteLoaded = false;
+
+// ═══════════════════════════════════════════
+// LOGIN
+// ═══════════════════════════════════════════
+function doLogin() {
+  const t = document.getElementById('tokenInput').value.trim();
+  const p = document.getElementById('pwdInput').value.trim();
+  const err = document.getElementById('loginError');
+
+  if (!t.startsWith('ghp_')) { err.textContent = '请填写有效的 GitHub Token（以 ghp_ 开头）'; err.style.display = 'block'; return; }
+  if (p.length < 4) { err.textContent = '密码至少 4 位'; err.style.display = 'block'; return; }
+
+  token = t;
+  sessionStorage.setItem('fb_token', t);
+  sessionStorage.setItem('fb_pwd', p);
+  err.style.display = 'none';
+  document.getElementById('loginScreen').style.display = 'none';
+  document.getElementById('dashboard').classList.add('active');
+  fetchSiteData();
+}
+
+function doLogout() {
+  sessionStorage.removeItem('fb_token');
+  token = '';
+  siteData = null; rawHtml = ''; siteLoaded = false;
+  document.getElementById('dashboard').classList.remove('active');
+  document.getElementById('loginScreen').style.display = 'flex';
+}
+
+// Auto-restore session
+(function() {
+  const savedToken = sessionStorage.getItem('fb_token');
+  if (savedToken) {
+    token = savedToken;
+    document.getElementById('tokenInput').value = savedToken;
+    document.getElementById('loginScreen').style.display = 'none';
+    document.getElementById('dashboard').classList.add('active');
+    fetchSiteData();
+  }
+})();
+
+// ═══════════════════════════════════════════
+// UTF-8 Base64 helpers
+// ═══════════════════════════════════════════
+function utf8ToBase64(str) {
+  const bytes = new TextEncoder().encode(str);
+  let binary = '';
+  bytes.forEach(b => binary += String.fromCharCode(b));
+  return btoa(binary);
+}
+function base64ToUtf8(b64) {
+  const binary = atob(b64.replace(/\s/g, ''));
+  const bytes = new Uint8Array(binary.length);
+  for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
+  return new TextDecoder().decode(bytes);
+}
+
+// ═══════════════════════════════════════════
+// GITHUB API HELPERS
+// ═══════════════════════════════════════════
+async function ghApi(method, path, body) {
+  const url = path.startsWith('http') ? path : `https://api.github.com/repos/${REPO}/contents${path}`;
+  const opts = {
+    method, headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' }
+  };
+  if (body) opts.body = JSON.stringify(body);
+  const res = await fetch(url, opts);
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}));
+    throw new Error(err.message || `API ${res.status}`);
+  }
+  return res.json();
+}
+
+// ═══════════════════════════════════════════
+// DATA FETCHING & PARSING
+// ═══════════════════════════════════════════
+async function fetchSiteData() {
+  setStatus('加载中...', 'info');
+  try {
+    // 1. Fetch index.html
+    const fileInfo = await ghApi('GET', '/index.html?ref=' + BRANCH);
+    fileSha = fileInfo.sha;
+    rawHtml = base64ToUtf8(fileInfo.content);
+
+    // 2. Also try to check images/ directory
+    let imageFiles = [];
+    try {
+      const imgs = await ghApi('GET', '/images?ref=' + BRANCH);
+      imageFiles = Array.isArray(imgs) ? imgs.filter(f => f.type === 'file').map(f => f.name) : [];
+    } catch(e) { /* no images dir yet */ }
+
+    // 3. Parse the HTML
+    siteData = parseSiteHtml(rawHtml, imageFiles);
+
+    // 4. Render all panels
+    renderDashboard();
+    renderArticles();
+    renderPhotos();
+    renderAbout();
+    siteLoaded = true;
+    setStatus('数据加载完成 ✓', 'success');
+  } catch(e) {
+    setStatus('加载失败: ' + e.message, 'error');
+  }
+}
+
+function parseSiteHtml(html, imageFiles) {
+  const data = {
+    hero: { name: 'Felix Li', subtitle: '', desc: '' },
+    articles: {},
+    photos: [],
+    about: { name: '', subtitle: '', desc: '', bio: '', email: '', github: '' },
+    imageFiles: imageFiles || []
+  };
+
+  // Parse hero
+  const heroMatch = html.match(/<div class="hero-title">([^<]+)<\/div>/);
+  if (heroMatch) data.hero.name = heroMatch[1];
+  const subMatch = html.match(/<div class="hero-subtitle">([^<]+)<\/div>/);
+  if (subMatch) data.hero.subtitle = subMatch[1];
+  const descMatch = html.match(/<div class="hero-desc">([^<]+)<\/div>/);
+  if (descMatch) data.hero.desc = descMatch[1];
+
+  // Parse articles by year
+  const postsSection = html.match(/<div class="posts-section">([\s\S]*?)<\/div>\s*<div class="footer">/);
+  if (postsSection) {
+    const content = postsSection[1];
+    const yearRegex = /<!-- (\d{4}) -->\s*<div class="year-label">\d{4}<\/div>\s*<div class="year-separator"><\/div>\s*([\s\S]*?)(?=<!-- \d{4} -->|$)/g;
+    let match;
+    while ((match = yearRegex.exec(content)) !== null) {
+      const year = match[1];
+      const yearContent = match[2];
+      const articles = [];
+      const postRegex = /<div class="post-item">\s*<span class="post-date">([^<]+)<\/span>\s*<span class="post-title">([^<]+)<\/span>\s*<span class="post-meta">([^<]+)<\/span>\s*<\/div>/g;
+      let pm;
+      while ((pm = postRegex.exec(yearContent)) !== null) {
+        articles.push({ date: pm[1], title: pm[2], meta: pm[3] });
+      }
+      data.articles[year] = articles;
+    }
+  }
+
+  // Parse photos
+  const photoRegex = /<div class="photo-placeholder" style="([^"]+)"><\/div>/g;
+  let pm;
+  let idx = 0;
+  while ((pm = photoRegex.exec(html)) !== null) {
+    const style = pm[1];
+    const heightMatch = style.match(/height:(\d+)px/);
+    const bgMatch = style.match(/background:(.+)/);
+    const urlMatch = style.match(/url\('([^']+)'\)/);
+    data.photos.push({
+      height: heightMatch ? heightMatch[1] : '400',
+      background: bgMatch ? bgMatch[1] : '',
+      hasImage: !!urlMatch,
+      src: urlMatch ? urlMatch[1] : null
+    });
+    idx++;
+  }
+
+  // Parse about
+  const nameMatch = html.match(/<div class="hero-title">([^<]+)<\/div>/);
+  if (nameMatch) data.about.name = nameMatch[1];
+  const bioMatch = html.match(/<div class="bio-text">([\s\S]*?)<\/div>/);
+  if (bioMatch) data.about.bio = bioMatch[1].trim();
+  const emailMatch = html.match(/<a class="contact-link" href="mailto:([^"]+)">/);
+  if (emailMatch) data.about.email = emailMatch[1];
+  const ghMatch = html.match(/<a href="#">GitHub<\/a>/);
+  // Parse about hero from photos page
+  const aboutSub = html.match(/<div class="hero-subtitle">([^<]+)<\/div>/);
+  if (aboutSub) data.about.subtitle = aboutSub[1];
+  const aboutDesc = html.match(/<div class="hero-desc">([^<]+)<\/div>/);
+  if (aboutDesc) data.about.desc = aboutDesc[1];
+
+  return data;
+}
+
+// ═══════════════════════════════════════════
+// PANEL SWITCHING
+// ═══════════════════════════════════════════
+function switchPanel(name) {
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+  // Find the tab button for this panel
+  document.querySelectorAll('.tab').forEach(t => {
+    if (t.textContent.includes(getPanelTitle(name))) t.classList.add('active');
+  });
+  document.getElementById('panel-' + name).classList.add('active');
+}
+
+function getPanelTitle(name) {
+  const map = { dashboard: '概览', articles: '文章管理', photos: '照片管理', about: '关于我' };
+  return map[name] || name;
+}
+
+// ═══════════════════════════════════════════
+// RENDER DASHBOARD
+// ═══════════════════════════════════════════
+function renderDashboard() {
+  let totalArticles = 0;
+  Object.values(siteData.articles).forEach(arr => totalArticles += arr.length);
+  document.getElementById('statArticles').textContent = totalArticles;
+  document.getElementById('statPhotos').textContent = siteData.photos.length;
+  document.getElementById('statLastUpdate').textContent = new Date().toLocaleDateString('zh-CN');
+}
+
+// ═══════════════════════════════════════════
+// RENDER ARTICLES
+// ═══════════════════════════════════════════
+function renderArticles() {
+  const container = document.getElementById('articleList');
+  let html = '';
+  const years = Object.keys(siteData.articles).sort((a, b) => b - a);
+  years.forEach(year => {
+    html += `<div style="font-weight:600;font-size:14px;margin:12px 0 4px;color:var(--sub);">${year}</div>`;
+    const articles = siteData.articles[year];
+    if (!articles || articles.length === 0) {
+      html += '<div style="font-size:13px;color:var(--sub);padding:8px 0;">暂无文章</div>';
+    } else {
+      articles.forEach((a, i) => {
+        html += `<div class="article-row">
+          <span class="a-year">${year}</span>
+          <span class="a-date">${a.date}</span>
+          <span class="a-title">${a.title}</span>
+          <span class="a-meta">${a.meta}</span>
+          <span class="a-actions">
+            <button class="btn btn-outline btn-sm" onclick="editArticle('${year}', ${i})">✏️</button>
+            <button class="btn btn-danger btn-sm" onclick="deleteArticle('${year}', ${i})">🗑</button>
+          </span>
+        </div>`;
+      });
+    }
+  });
+  container.innerHTML = html;
+}
+
+let pendingArticles = null;
+
+function showArticleEditor() {
+  document.getElementById('articleEditor').classList.remove('hidden');
+  document.getElementById('articleEditorTitle').textContent = '新增文章';
+  document.getElementById('aeYear').value = '2026';
+  document.getElementById('aeDate').value = '';
+  document.getElementById('aeTitle').value = '';
+  document.getElementById('aeMeta').value = '';
+  document.getElementById('aeEditIdx').value = '-1';
+  document.getElementById('aeEditYear').value = '';
+}
+
+function editArticle(year, idx) {
+  const article = siteData.articles[year][idx];
+  document.getElementById('articleEditor').classList.remove('hidden');
+  document.getElementById('articleEditorTitle').textContent = '编辑文章';
+  document.getElementById('aeYear').value = year;
+  document.getElementById('aeDate').value = article.date;
+  document.getElementById('aeTitle').value = article.title;
+  document.getElementById('aeMeta').value = article.meta;
+  document.getElementById('aeEditIdx').value = idx;
+  document.getElementById('aeEditYear').value = year;
+}
+
+function saveArticle() {
+  const year = document.getElementById('aeYear').value;
+  const date = document.getElementById('aeDate').value.trim();
+  const title = document.getElementById('aeTitle').value.trim();
+  const meta = document.getElementById('aeMeta').value.trim();
+  const editIdx = parseInt(document.getElementById('aeEditIdx').value);
+  const editYear = document.getElementById('aeEditYear').value;
+
+  if (!date || !title || !meta) { alert('请填写完整信息'); return; }
+
+  // Ensure year exists in data
+  if (!siteData.articles[year]) siteData.articles[year] = [];
+
+  if (editIdx >= 0 && editYear) {
+    // Editing existing — remove from old year first
+    if (editYear === year) {
+      siteData.articles[year][editIdx] = { date, title, meta };
+    } else {
+      siteData.articles[editYear].splice(editIdx, 1);
+      siteData.articles[year].push({ date, title, meta });
+      if (siteData.articles[editYear].length === 0) delete siteData.articles[editYear];
+    }
+  } else {
+    // New article
+    siteData.articles[year].push({ date, title, meta });
+  }
+
+  renderArticles();
+  renderDashboard();
+  cancelArticleEdit();
+  setStatus('文章已暂存，点击"发布到网站"完成更新', 'info');
+}
+
+function deleteArticle(year, idx) {
+  if (!confirm(`确定删除"${siteData.articles[year][idx].title}"？`)) return;
+  siteData.articles[year].splice(idx, 1);
+  if (siteData.articles[year].length === 0) delete siteData.articles[year];
+  renderArticles();
+  renderDashboard();
+  setStatus('文章已删除（暂存），请发布以更新网站', 'info');
+}
+
+function cancelArticleEdit() {
+  document.getElementById('articleEditor').classList.add('hidden');
+  document.getElementById('aeDate').value = '';
+  document.getElementById('aeTitle').value = '';
+  document.getElementById('aeMeta').value = '';
+  document.getElementById('aeEditIdx').value = '-1';
+  document.getElementById('aeEditYear').value = '';
+}
+
+// ═══════════════════════════════════════════
+// RENDER PHOTOS
+// ═══════════════════════════════════════════
+function renderPhotos() {
+  const grid = document.getElementById('photoGrid');
+  grid.innerHTML = siteData.photos.map((p, i) => `
+    <div class="photo-card">
+      <div class="img-wrap" style="background:${p.background};background-size:cover;${p.hasImage ? `background-image:url('${p.src}');` : ''}">
+        ${p.hasImage ? '' : '<span>渐变占位</span>'}
+      </div>
+      <div class="info">
+        <span class="idx">照片 #${i + 1} · ${p.height}px</span>
+        <button class="btn btn-danger btn-sm" onclick="deletePhoto(${i})">🗑</button>
+      </div>
+    </div>
+  `).join('');
+}
+
+function deletePhoto(idx) {
+  if (!confirm(`确定删除照片 #${idx + 1}？`)) return;
+  siteData.photos.splice(idx, 1);
+  renderPhotos();
+  renderDashboard();
+  setStatus('照片已删除（暂存），请发布以更新网站', 'info');
+}
+
+async function handlePhotoUpload(files) {
+  if (!files || files.length === 0) return;
+  setStatus('上传中...', 'info');
+
+  for (const file of files) {
+    try {
+      // Compress image
+      const compressed = await compressImage(file, 1200, 0.8);
+      const base64 = compressed.split(',')[1];
+
+      // Generate filename
+      const ext = file.name.split('.').pop().toLowerCase() || 'jpg';
+      const fileName = `images/photo-${Date.now()}-${Math.random().toString(36).slice(2,6)}.${ext}`;
+
+      // Upload to GitHub
+      await ghApi('PUT', `/${fileName}`, {
+        message: `Upload photo: ${file.name}`,
+        content: base64,
+        branch: BRANCH
+      });
+
+      // Get raw URL
+      const rawUrl = `https://raw.githubusercontent.com/${REPO}/${BRANCH}/${fileName}`;
+
+      // Add to data
+      siteData.photos.push({
+        height: '400',
+        background: `url('${rawUrl}');background-size:cover`,
+        hasImage: true,
+        src: rawUrl
+      });
+
+      toast('照片上传成功');
+    } catch(e) {
+      toast('上传失败: ' + e.message, 'error');
+    }
+  }
+
+  renderPhotos();
+  renderDashboard();
+  setStatus('照片上传完成，请点击"发布到网站"更新页面', 'info');
+}
+
+function compressImage(file, maxWidth, quality) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      const img = new Image();
+      img.onload = () => {
+        const canvas = document.createElement('canvas');
+        let w = img.width, h = img.height;
+        if (w > maxWidth) { h = h * maxWidth / w; w = maxWidth; }
+        canvas.width = w; canvas.height = h;
+        const ctx = canvas.getContext('2d');
+        ctx.drawImage(img, 0, 0, w, h);
+        resolve(canvas.toDataURL('image/jpeg', quality));
+      };
+      img.src = e.target.result;
+    };
+    reader.onerror = reject;
+    reader.readAsDataURL(file);
+  });
+}
+
+// ═══════════════════════════════════════════
+// RENDER ABOUT
+// ═══════════════════════════════════════════
+function renderAbout() {
+  document.getElementById('aboutName').value = siteData.about.name || 'Felix Li';
+  document.getElementById('aboutSubtitle').value = siteData.about.subtitle || 'Photography · Wuhan, China';
+  document.getElementById('aboutDesc').value = siteData.about.desc || '';
+  document.getElementById('aboutBio').value = siteData.about.bio || '';
+  document.getElementById('aboutEmail').value = siteData.about.email || '';
+  document.getElementById('aboutGitHub').value = siteData.about.github || 'felixli2021';
+}
+
+// ═══════════════════════════════════════════
+// REGENERATE HTML
+// ═══════════════════════════════════════════
+function regenerateHTML() {
+  // Collect about data
+  siteData.about.name = document.getElementById('aboutName').value.trim() || 'Felix Li';
+  siteData.about.subtitle = document.getElementById('aboutSubtitle').value.trim();
+  siteData.about.desc = document.getElementById('aboutDesc').value.trim();
+  siteData.about.bio = document.getElementById('aboutBio').value.trim();
+  siteData.about.email = document.getElementById('aboutEmail').value.trim();
+  siteData.about.github = document.getElementById('aboutGitHub').value.trim();
+
+  // Read the base template from raw HTML
+  let html = rawHtml;
+
+  // Update hero section (Photos page)
+  html = html.replace(
+    /<div class="hero-title">[^<]*<\/div>/,
+    `<div class="hero-title">${escHtml(siteData.about.name)}</div>`
+  );
+  html = html.replace(
+    /<div class="hero-subtitle">[^<]*<\/div>/,
+    `<div class="hero-subtitle">${escHtml(siteData.about.subtitle)}</div>`
+  );
+  html = html.replace(
+    /<div class="hero-desc">[^<]*<\/div>/,
+    `<div class="hero-desc">${escHtml(siteData.about.desc)}</div>`
+  );
+
+  // Update blog posts section
+  let postsHtml = '';
+  const years = Object.keys(siteData.articles).sort((a, b) => b - a);
+  years.forEach(year => {
+    postsHtml += `\n      <!-- ${year} -->\n      <div class="year-label">${year}</div>\n      <div class="year-separator"></div>`;
+    siteData.articles[year].forEach(a => {
+      postsHtml += `\n      <div class="post-item">\n        <span class="post-date">${escHtml(a.date)}</span>\n        <span class="post-title">${escHtml(a.title)}</span>\n        <span class="post-meta">${escHtml(a.meta)}</span>\n      </div>`;
+    });
+    postsHtml += '\n';
+  });
+
+  // Replace posts section
+  const postsRegex = /<div class="posts-section">[\s\S]*?<\/div>\s*<div class="footer">/;
+  html = html.replace(postsRegex, `<div class="posts-section">${postsHtml}    </div>\n\n    <div class="footer">`);
+
+  // Update photo gallery (photos page)
+  if (siteData.photos.length > 0) {
+    // Rebuild the columns - distribute photos across 3 columns
+    const cols = [[], [], []];
+    siteData.photos.forEach((p, i) => cols[i % 3].push(p));
+
+    let galleryHtml = '';
+    cols.forEach(col => {
+      galleryHtml += '        <div class="column">\n';
+      col.forEach(p => {
+        galleryHtml += `          <div class="photo-placeholder" style="height:${p.height}px;background:${p.background};"></div>\n`;
+      });
+      galleryHtml += '        </div>\n';
+    });
+
+    // Replace gallery section
+    const galleryRegex = /<div class="gallery-section">[\s\S]*?<\/div>\s*<\/div>\s*<div class="footer">/;
+    html = html.replace(galleryRegex, `<div class="gallery-section">\n      <div class="section-title">Photography</div>\n      <div class="columns">\n${galleryHtml}      </div>\n    </div>\n\n    <div class="footer">`);
+  }
+
+  // Update about page bio
+  html = html.replace(
+    /<div class="bio-text">[\s\S]*?<\/div>/,
+    `<div class="bio-text">${escHtml(siteData.about.bio)}</div>`
+  );
+
+  // Update about page contact email
+  html = html.replace(
+    /<a class="contact-link" href="mailto:[^"]*">[^<]*<\/a>/,
+    `<a class="contact-link" href="mailto:${escHtml(siteData.about.email)}">${escHtml(siteData.about.email)}</a>`
+  );
+
+  // Update contact title area — ensure subtitle and desc match
+  html = html.replace(
+    /<div class="hero-subtitle">[^<]*<\/div>/g,
+    `<div class="hero-subtitle">${escHtml(siteData.about.subtitle)}</div>`
+  );
+  html = html.replace(
+    /<div class="hero-desc">[^<]*<\/div>/g,
+    `<div class="hero-desc">${escHtml(siteData.about.desc)}</div>`
+  );
+
+  return html;
+}
+
+function escHtml(s) {
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+// ═══════════════════════════════════════════
+// PUBLISH
+// ═══════════════════════════════════════════
+function previewSite() {
+  const html = regenerateHTML();
+  const win = window.open('', '_blank');
+  win.document.write(html);
+  win.document.close();
+  setStatus('预览已在新窗口打开', 'info');
+}
+
+async function publishSite() {
+  if (!confirm('确定发布到线上网站？发布后所有人可见。')) return;
+
+  setStatus('发布中...', 'info');
+  try {
+    const newHtml = regenerateHTML();
+    const base64 = utf8ToBase64(newHtml);
+
+    await ghApi('PUT', '/index.html', {
+      message: 'Update blog content via admin panel',
+      content: base64,
+      sha: fileSha,
+      branch: BRANCH
+    });
+
+    // Update local state
+    rawHtml = newHtml;
+    const fileInfo = await ghApi('GET', '/index.html?ref=' + BRANCH);
+    fileSha = fileInfo.sha;
+
+    setStatus('发布成功！网站已更新 → felixli2021.github.io', 'success');
+    toast('发布成功！稍等约1分钟刷新网站即可看到更新');
+  } catch(e) {
+    setStatus('发布失败: ' + e.message, 'error');
+  }
+}
+
+// ═══════════════════════════════════════════
+// UTILS
+// ═══════════════════════════════════════════
+function setStatus(msg, type) {
+  const el = document.getElementById('publishStatus');
+  el.textContent = msg;
+  el.className = 'status ' + type;
+}
+
+function toast(msg, type) {
+  type = type || 'success';
+  const t = document.createElement('div');
+  t.className = 'toast ' + type;
+  t.textContent = msg;
+  document.body.appendChild(t);
+  setTimeout(() => t.remove(), 3000);
+}
+
+// Drag & drop for photo upload
+(function() {
+  const zone = document.getElementById('photoDropZone');
+  if (!zone) return;
+  zone.addEventListener('dragover', (e) => { e.preventDefault(); zone.style.borderColor = 'var(--accent)'; });
+  zone.addEventListener('dragleave', () => { zone.style.borderColor = 'var(--border)'; });
+  zone.addEventListener('drop', (e) => {
+    e.preventDefault();
+    zone.style.borderColor = 'var(--border)';
+    handlePhotoUpload(e.dataTransfer.files);
+  });
+})();
+</script>
+
+</body>
+</html>
