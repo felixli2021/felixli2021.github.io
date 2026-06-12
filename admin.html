@@ -486,22 +486,39 @@ function parseSiteHtml(html, imageFiles) {
     }
   }
 
-  // Parse photos
-  const photoRegex = /<div class="photo-placeholder" style="([^"]+)"><\/div>/g;
-  let pm;
+  // Parse photos (supports both old photo-placeholder and new photo-card format)
+  // First try new format: <div class="photo-card" style="height:NNNpx"><img src="URL".../></div>
+  const photoCardRegex = /<div class="photo-card" style="height:(\d+)px">([\s\S]*?)<\/div>\s*(?=<div class="column">|<div class="footer"|<\/div>\s*<\/div>\s*<\/div>\s*<div class="footer"|$)/g;
   let idx = 0;
-  while ((pm = photoRegex.exec(html)) !== null) {
-    const style = pm[1];
-    const heightMatch = style.match(/height:(\d+)px/);
-    const bgMatch = style.match(/background:(.+)/);
-    const urlMatch = style.match(/url\('([^']+)'\)/);
+  let match;
+  while ((match = photoCardRegex.exec(html)) !== null) {
+    const height = match[1];
+    const inner = match[2];
+    const imgMatch = inner.match(/<img[^>]*src="([^"]*)"[^>]*>/);
+    const bgMatch = inner.match(/background:(linear-gradient\([^)]+\))/);
     data.photos.push({
-      height: heightMatch ? heightMatch[1] : '400',
-      background: bgMatch ? bgMatch[1] : '',
-      hasImage: !!urlMatch,
-      src: urlMatch ? urlMatch[1] : null
+      height: height,
+      background: bgMatch ? bgMatch[1] : 'linear-gradient(180deg,#334D66,#6699CC)',
+      hasImage: !!imgMatch,
+      src: imgMatch ? imgMatch[1] : null
     });
     idx++;
+  }
+  // Fallback: old photo-placeholder format
+  if (data.photos.length === 0) {
+    const oldRegex = /<div class="photo-placeholder" style="([^"]+)"><\/div>/g;
+    while ((match = oldRegex.exec(html)) !== null) {
+      const style = match[1];
+      const heightMatch = style.match(/height:(\d+)px/);
+      const bgMatch = style.match(/background:(.+)/);
+      const urlMatch = style.match(/url\('([^']+)'\)/);
+      data.photos.push({
+        height: heightMatch ? heightMatch[1] : '400',
+        background: bgMatch ? bgMatch[1] : '',
+        hasImage: !!urlMatch,
+        src: urlMatch ? urlMatch[1] : null
+      });
+    }
   }
 
   // Parse about
@@ -667,7 +684,7 @@ function renderPhotos() {
         ${p.hasImage ? '' : '<span>渐变占位</span>'}
       </div>
       <div class="info">
-        <span class="idx">照片 #${i + 1} · ${p.height}px</span>
+        <span class="idx">照片 #${i + 1} · ${p.height}px${p.hasImage ? ' · 有图片' : ' · 占位'}</span>
         <button class="btn btn-danger btn-sm" onclick="deletePhoto(${i})">🗑</button>
       </div>
     </div>
@@ -689,7 +706,7 @@ async function handlePhotoUpload(files) {
   for (const file of files) {
     try {
       // Compress image
-      const compressed = await compressImage(file, 1200, 0.8);
+      const compressed = await compressImage(file, 2400, 0.92);
       const base64 = compressed.split(',')[1];
 
       // Generate filename
@@ -709,7 +726,7 @@ async function handlePhotoUpload(files) {
       // Add to data
       siteData.photos.push({
         height: '400',
-        background: `url('${rawUrl}');background-size:cover`,
+        background: 'linear-gradient(180deg,#334D66,#6699CC)',
         hasImage: true,
         src: rawUrl
       });
@@ -812,14 +829,18 @@ function regenerateHTML() {
     cols.forEach(col => {
       galleryHtml += '        <div class="column">\n';
       col.forEach(p => {
-        galleryHtml += `          <div class="photo-placeholder" style="height:${p.height}px;background:${p.background};"></div>\n`;
+        if (p.hasImage && p.src) {
+          galleryHtml += `          <div class="photo-card" style="height:${p.height}px"><img src="${p.src}" loading="lazy" alt="Photo"></div>\n`;
+        } else {
+          galleryHtml += `          <div class="photo-card" style="height:${p.height}px"><div style="width:100%;height:100%;background:${p.background};display:flex;align-items:center;justify-content:center;color:rgba(255,255,255,0.5);font-size:14px">Photo</div></div>\n`;
+        }
       });
       galleryHtml += '        </div>\n';
     });
 
-    // Replace gallery section
-    const galleryRegex = /<div class="gallery-section">[\s\S]*?<\/div>\s*<\/div>\s*<div class="footer">/;
-    html = html.replace(galleryRegex, `<div class="gallery-section">\n      <div class="section-title">Photography</div>\n      <div class="columns">\n${galleryHtml}      </div>\n    </div>\n\n    <div class="footer">`);
+    // Replace gallery columns
+    const galleryRegex = /<div class="columns">[\s\S]*?<\/div>\s*<\/div>\s*<div class="footer">/;
+    html = html.replace(galleryRegex, `<div class="columns">\n${galleryHtml}      </div>\n    </div>\n\n    <div class="footer">`);
   }
 
   // Update about page bio
