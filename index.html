@@ -335,15 +335,28 @@
       display: flex;
       align-items: center;
       gap: 12px;
-      cursor: pointer;
-      transition: opacity 0.2s;
     }
 
     @media (min-width: 768px) {
       .post-item { gap: 16px; }
     }
 
-    .post-item:hover { opacity: 0.7; }
+    .post-link {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      text-decoration: none;
+      color: inherit;
+      flex: 1;
+      transition: opacity 0.2s;
+      padding: 4px 0;
+    }
+
+    @media (min-width: 768px) {
+      .post-link { gap: 16px; }
+    }
+
+    .post-link:hover { opacity: 0.6; }
 
     .post-date {
       font-size: 13px;
@@ -535,20 +548,44 @@
     <div class="hero">
       <div class="hero-title">Felix Li</div>
       <div class="hero-subtitle">Photography · Wuhan, China</div>
-      <div class="hero-desc">Skin in the game</div>
+      <div class="hero-desc">A personal photography collection and blog. Capturing moments, places, and stories through the lens.</div>
     </div>
 
     <div class="gallery-section">
       <div class="section-title">Photography</div>
       <div class="columns">
         <div class="column">
-          <div class="photo-card" style="height:480px"><img src="https://raw.githubusercontent.com/felixli2021/felixli2021.github.io/main/images/photo-1781263351894-kd29.jpg" loading="lazy" alt="Photo"></div>
+          <div class="photo-card" style="height:480px">
+            <div style="width:100%;height:100%;background:linear-gradient(180deg,#334D66,#6699CC);display:flex;align-items:center;justify-content:center;color:rgba(255,255,255,0.5);font-size:14px">Photo 1</div>
+          </div>
+          <div class="photo-card" style="height:320px">
+            <div style="width:100%;height:100%;background:linear-gradient(180deg,#804D33,#CC9966);display:flex;align-items:center;justify-content:center;color:rgba(255,255,255,0.5);font-size:14px">Photo 2</div>
+          </div>
+          <div class="photo-card" style="height:400px">
+            <div style="width:100%;height:100%;background:linear-gradient(180deg,#4D804D,#99CC99);display:flex;align-items:center;justify-content:center;color:rgba(255,255,255,0.5);font-size:14px">Photo 3</div>
+          </div>
         </div>
         <div class="column">
-          <div class="photo-card" style="height:360px"><img src="https://raw.githubusercontent.com/felixli2021/felixli2021.github.io/main/images/photo-1781263355888-swfd.jpg" loading="lazy" alt="Photo"></div>
+          <div class="photo-card" style="height:360px">
+            <div style="width:100%;height:100%;background:linear-gradient(180deg,#99334D,#CC6699);display:flex;align-items:center;justify-content:center;color:rgba(255,255,255,0.5);font-size:14px">Photo 4</div>
+          </div>
+          <div class="photo-card" style="height:500px">
+            <div style="width:100%;height:100%;background:linear-gradient(180deg,#1A3366,#4D80B3);display:flex;align-items:center;justify-content:center;color:rgba(255,255,255,0.5);font-size:14px">Photo 5</div>
+          </div>
+          <div class="photo-card" style="height:280px">
+            <div style="width:100%;height:100%;background:linear-gradient(180deg,#B3B333,#E6E666);display:flex;align-items:center;justify-content:center;color:rgba(255,255,255,0.5);font-size:14px">Photo 6</div>
+          </div>
         </div>
         <div class="column">
-          <div class="photo-card" style="height:300px"><img src="https://raw.githubusercontent.com/felixli2021/felixli2021.github.io/main/images/photo-1781263359776-y7jv.jpg" loading="lazy" alt="Photo"></div>
+          <div class="photo-card" style="height:300px">
+            <div style="width:100%;height:100%;background:linear-gradient(180deg,#661A33,#B34D80);display:flex;align-items:center;justify-content:center;color:rgba(255,255,255,0.5);font-size:14px">Photo 7</div>
+          </div>
+          <div class="photo-card" style="height:440px">
+            <div style="width:100%;height:100%;background:linear-gradient(180deg,#338080,#66CCB3);display:flex;align-items:center;justify-content:center;color:rgba(255,255,255,0.5);font-size:14px">Photo 8</div>
+          </div>
+          <div class="photo-card" style="height:350px">
+            <div style="width:100%;height:100%;background:linear-gradient(180deg,#806633,#CCB380);display:flex;align-items:center;justify-content:center;color:rgba(255,255,255,0.5);font-size:14px">Photo 9</div>
+          </div>
         </div>
       </div>
     </div>
@@ -579,13 +616,55 @@
     </div>
 
     <div class="posts-section">
-      <!-- 2026 -->
       <div class="year-label">2026</div>
       <div class="year-separator"></div>
       <div class="post-item">
-        <span class="post-date">6/12</span>
-        <span class="post-title">我也有自己的博客了</span>
-        <span class="post-meta">2</span>
+        <a class="post-link" href="article.html?slug=wuhan-bridge-night">
+          <span class="post-date">Jun 11</span>
+          <span class="post-title">武汉长江大桥夜拍手记</span>
+          <span class="post-meta">6 min</span>
+        </a>
+      </div>
+      <div class="post-item">
+        <a class="post-link" href="article.html?slug=east-lake-cherry-blossom">
+          <span class="post-date">May 20</span>
+          <span class="post-title">春日东湖·樱花园人像拍摄</span>
+          <span class="post-meta">8 min</span>
+        </a>
+      </div>
+      <div class="post-item">
+        <a class="post-link" href="article.html?slug=lightroom-film-simulation">
+          <span class="post-date">Mar 08</span>
+          <span class="post-title">胶片感调色思考：在 Lightroom 里还原心境</span>
+          <span class="post-meta">10 min</span>
+        </a>
+      </div>
+
+      <div class="year-label">2025</div>
+      <div class="year-separator"></div>
+      <div class="post-item">
+        <a class="post-link" href="article.html?slug=wuhan-first-snow-a7r5">
+          <span class="post-date">Dec 15</span>
+          <span class="post-title">用 Sony A7R5 拍武汉初雪</span>
+          <span class="post-meta">12 min</span>
+        </a>
+      </div>
+      <div class="post-item">
+        <a class="post-link" href="article.html?slug=post-processing-philosophy">
+          <span class="post-date">Aug 03</span>
+          <span class="post-title">后期思路：让照片有温度而不是精度的游戏</span>
+          <span class="post-meta">9 min</span>
+        </a>
+      </div>
+
+      <div class="year-label">2024</div>
+      <div class="year-separator"></div>
+      <div class="post-item">
+        <a class="post-link" href="article.html?slug=35mm-vs-50mm-choice">
+          <span class="post-date">Nov 22</span>
+          <span class="post-title">关于这支镜头的抉择：35mm vs 50mm</span>
+          <span class="post-meta">7 min</span>
+        </a>
       </div>
     </div>
 
@@ -618,11 +697,11 @@
       <div class="avatar-frame"></div>
       <div class="bio">
         <div class="bio-title">About Me</div>
-        <div class="bio-text">我是 Felix，住在武汉。这个站点是我记录照片和思考的地方。
+        <div class="bio-text">我是 Felix，住在武汉的摄影爱好者。白天是软件工程师，夜晚和周末拿着相机在城市里游荡。这个站点是我记录照片和思考的地方。
 
-器材：理光GR4+ Xiaomi 12S Ultra</div>
+器材：Sony A7R5 + 35mm f/1.4</div>
         <div class="contact-title">Contact</div>
-        <a class="contact-link" href="mailto:1412622118@qq.com">1412622118@qq.com</a>
+        <a class="contact-link" href="mailto:felix@felixli.com">felix@felixli.com</a>
       </div>
     </div>
 
