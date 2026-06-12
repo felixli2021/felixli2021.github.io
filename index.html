@@ -20,26 +20,26 @@
 
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
-    html, body {
-      width: 100%;
-      height: 100%;
-      overflow: hidden;
-      background: #0a0a0a;
-      font-family: 'Space Grotesk', sans-serif;
+    html {
+      font-family: 'Space Grotesk', 'Microsoft YaHei', 'PingFang SC', sans-serif;
       font-weight: 400;
       color: var(--text-primary);
+      background: var(--bg);
       -webkit-font-smoothing: antialiased;
     }
 
-    .frame {
-      position: fixed;
-      top: 50%;
-      left: 50%;
-      transform-origin: top left;
-      width: 1440px;
-      height: auto;
+    body {
+      min-height: 100vh;
       background: var(--bg);
-      overflow: visible;
+    }
+
+    /* ─── Wrapper ─── */
+    .wrapper {
+      max-width: 1440px;
+      margin: 0 auto;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
     }
 
     /* ─── Header ─── */
@@ -48,8 +48,15 @@
       align-items: center;
       justify-content: space-between;
       height: 64px;
-      padding: 0 64px;
+      padding: 0 32px;
       background: var(--bg);
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+
+    @media (min-width: 768px) {
+      .header { padding: 0 64px; }
     }
 
     .logo {
@@ -61,7 +68,11 @@
 
     .nav {
       display: flex;
-      gap: 32px;
+      gap: 24px;
+    }
+
+    @media (min-width: 768px) {
+      .nav { gap: 32px; }
     }
 
     .nav a {
@@ -93,38 +104,58 @@
 
     /* ─── Hero ─── */
     .hero {
-      padding: 80px 64px 40px;
+      padding: 60px 32px 32px;
       display: flex;
       flex-direction: column;
-      gap: 16px;
+      gap: 12px;
+    }
+
+    @media (min-width: 768px) {
+      .hero { padding: 80px 64px 40px; gap: 16px; }
     }
 
     .hero-title {
       font-family: 'Archivo', sans-serif;
       font-weight: 700;
-      font-size: 48px;
+      font-size: 32px;
       color: var(--text-primary);
       line-height: 1.1;
     }
 
+    @media (min-width: 768px) {
+      .hero-title { font-size: 48px; }
+    }
+
     .hero-subtitle {
-      font-size: 16px;
+      font-size: 15px;
       color: var(--text-secondary);
     }
 
+    @media (min-width: 768px) {
+      .hero-subtitle { font-size: 16px; }
+    }
+
     .hero-desc {
-      font-size: 15px;
+      font-size: 14px;
       color: var(--text-body);
       max-width: 560px;
       line-height: 1.6;
     }
 
+    @media (min-width: 768px) {
+      .hero-desc { font-size: 15px; }
+    }
+
     /* ─── Gallery ─── */
     .gallery-section {
-      padding: 40px 64px 80px;
+      padding: 32px 32px 60px;
       display: flex;
       flex-direction: column;
-      gap: 32px;
+      gap: 24px;
+    }
+
+    @media (min-width: 768px) {
+      .gallery-section { padding: 40px 64px 80px; gap: 32px; }
     }
 
     .section-title {
@@ -137,14 +168,30 @@
 
     .columns {
       display: flex;
-      gap: 24px;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    @media (min-width: 640px) {
+      .columns {
+        flex-direction: row;
+        gap: 16px;
+      }
+    }
+
+    @media (min-width: 768px) {
+      .columns { gap: 24px; }
     }
 
     .column {
       flex: 1;
       display: flex;
       flex-direction: column;
-      gap: 24px;
+      gap: 16px;
+    }
+
+    @media (min-width: 768px) {
+      .column { gap: 24px; }
     }
 
     .photo-placeholder {
@@ -163,10 +210,14 @@
 
     /* ─── Blog Posts ─── */
     .posts-section {
-      padding: 60px 64px 80px;
+      padding: 40px 32px 60px;
       display: flex;
       flex-direction: column;
-      gap: 48px;
+      gap: 32px;
+    }
+
+    @media (min-width: 768px) {
+      .posts-section { padding: 60px 64px 80px; gap: 48px; }
     }
 
     .year-label {
@@ -178,54 +229,92 @@
     .year-separator {
       height: 1px;
       background: var(--separator);
-      margin: -44px 0 -44px;
+      margin-top: calc(-32px + 8px);
+      margin-bottom: calc(-32px + 8px);
+    }
+
+    @media (min-width: 768px) {
+      .year-separator {
+        margin-top: calc(-48px + 8px);
+        margin-bottom: calc(-48px + 8px);
+      }
     }
 
     .post-item {
       display: flex;
       align-items: center;
-      gap: 16px;
+      gap: 12px;
       cursor: pointer;
       transition: opacity 0.2s;
+    }
+
+    @media (min-width: 768px) {
+      .post-item { gap: 16px; }
     }
 
     .post-item:hover { opacity: 0.7; }
 
     .post-date {
-      font-size: 14px;
+      font-size: 13px;
       color: var(--text-secondary);
-      width: 100px;
+      width: 80px;
       flex-shrink: 0;
     }
 
+    @media (min-width: 768px) {
+      .post-date { font-size: 14px; width: 100px; }
+    }
+
     .post-title {
-      font-size: 15px;
+      font-size: 14px;
       font-weight: 500;
       color: var(--text-primary);
       flex: 1;
     }
 
+    @media (min-width: 768px) {
+      .post-title { font-size: 15px; }
+    }
+
     .post-meta {
-      font-size: 13px;
+      font-size: 12px;
       color: var(--text-secondary);
-      width: 60px;
+      width: 50px;
       flex-shrink: 0;
       text-align: right;
+    }
+
+    @media (min-width: 768px) {
+      .post-meta { font-size: 13px; width: 60px; }
     }
 
     /* ─── About ─── */
     .about-body {
       display: flex;
-      align-items: center;
-      padding: 80px 64px;
-      gap: 80px;
+      flex-direction: column;
+      align-items: flex-start;
+      padding: 40px 32px;
+      gap: 32px;
+    }
+
+    @media (min-width: 768px) {
+      .about-body {
+        flex-direction: row;
+        align-items: center;
+        padding: 80px 64px;
+        gap: 80px;
+      }
     }
 
     .avatar-frame {
-      width: 280px;
-      height: 360px;
+      width: 200px;
+      height: 260px;
       flex-shrink: 0;
       background: linear-gradient(135deg, #334D66, #8099B3);
+    }
+
+    @media (min-width: 768px) {
+      .avatar-frame { width: 280px; height: 360px; }
     }
 
     .bio {
@@ -238,15 +327,23 @@
     .bio-title {
       font-family: 'Archivo', sans-serif;
       font-weight: 700;
-      font-size: 28px;
+      font-size: 24px;
       color: var(--text-primary);
     }
 
+    @media (min-width: 768px) {
+      .bio-title { font-size: 28px; }
+    }
+
     .bio-text {
-      font-size: 15px;
+      font-size: 14px;
       color: var(--text-body);
       line-height: 26px;
       white-space: pre-line;
+    }
+
+    @media (min-width: 768px) {
+      .bio-text { font-size: 15px; }
     }
 
     .contact-title {
@@ -268,13 +365,23 @@
     /* ─── Footer ─── */
     .footer {
       display: flex;
-      align-items: center;
-      justify-content: space-between;
-      height: auto;
-      padding: 32px 64px;
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 12px;
+      padding: 24px 32px;
       background: var(--bg-footer);
       font-size: 13px;
       color: var(--text-secondary);
+      margin-top: auto;
+    }
+
+    @media (min-width: 768px) {
+      .footer {
+        flex-direction: row;
+        align-items: center;
+        justify-content: space-between;
+        padding: 32px 64px;
+      }
     }
 
     .footer-links {
@@ -296,13 +403,15 @@
     }
 
     .page.active {
-      display: block;
+      display: flex;
+      flex-direction: column;
+      flex: 1;
     }
   </style>
 </head>
 <body>
 
-<div class="frame" id="designFrame">
+<div class="wrapper">
 
   <!-- ══════════════ PHOTOS PAGE ══════════════ -->
   <div class="page active" id="page-photos">
@@ -466,21 +575,6 @@
 
 <script>
   (function() {
-    const frame = document.getElementById('designFrame');
-    const DESKTOP_WIDTH = 1440;
-    const DESKTOP_HEIGHT = 900;
-
-    // ─── Responsive Scaling ───
-    function scaleFrame() {
-      const scale = Math.min(window.innerWidth / DESKTOP_WIDTH, window.innerHeight / DESKTOP_HEIGHT);
-      const offsetX = (window.innerWidth - DESKTOP_WIDTH * scale) / 2;
-      const offsetY = (window.innerHeight - DESKTOP_HEIGHT * scale) / 2;
-      frame.style.transform = `scale(${scale}) translate(${offsetX / scale}px, ${offsetY / scale}px)`;
-    }
-
-    window.addEventListener('resize', scaleFrame);
-    scaleFrame();
-
     // ─── Page Navigation ───
     const pages = {
       photos: document.getElementById('page-photos'),
@@ -492,13 +586,11 @@
       Object.values(pages).forEach(p => p.classList.remove('active'));
       pages[name].classList.add('active');
 
-      // Update all nav links across all pages
       document.querySelectorAll('.nav a').forEach(link => {
         link.classList.toggle('active', link.dataset.page === name);
       });
 
-      // Scroll to top
-      window.scrollTo({ top: 0 });
+      window.scrollTo({ top: 0, behavior: 'smooth' });
     }
 
     document.querySelectorAll('.nav a').forEach(link => {
