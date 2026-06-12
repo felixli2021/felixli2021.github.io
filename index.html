@@ -194,18 +194,109 @@
       .column { gap: 24px; }
     }
 
-    .photo-placeholder {
+    /* ─── Photo Card ─── */
+    .photo-card {
+      position: relative;
       width: 100%;
-      background-size: cover;
-      background-position: center;
+      overflow: hidden;
+      cursor: zoom-in;
+      background: #F0F0F0;
       border-radius: 0;
-      transition: transform 0.3s ease, opacity 0.3s ease;
-      cursor: pointer;
     }
 
-    .photo-placeholder:hover {
-      transform: scale(1.02);
-      opacity: 0.9;
+    .photo-card img {
+      display: block;
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      transition: transform 0.4s ease;
+    }
+
+    .photo-card:hover img {
+      transform: scale(1.03);
+    }
+
+    .photo-card::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: rgba(0,0,0,0);
+      transition: background 0.3s ease;
+      pointer-events: none;
+    }
+
+    .photo-card:hover::after {
+      background: rgba(0,0,0,0.08);
+    }
+
+    /* ─── Lightbox ─── */
+    .lightbox {
+      position: fixed;
+      inset: 0;
+      z-index: 9999;
+      background: rgba(0,0,0,0.92);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.3s ease;
+      cursor: zoom-out;
+    }
+
+    .lightbox.open {
+      opacity: 1;
+      pointer-events: auto;
+    }
+
+    .lightbox-img {
+      max-width: 92vw;
+      max-height: 92vh;
+      object-fit: contain;
+      cursor: zoom-in;
+      transition: transform 0.3s ease;
+      user-select: none;
+      -webkit-user-select: none;
+    }
+
+    .lightbox-img.actual {
+      max-width: none;
+      max-height: none;
+      cursor: zoom-out;
+    }
+
+    .lightbox-close {
+      position: absolute;
+      top: 20px;
+      right: 24px;
+      width: 44px;
+      height: 44px;
+      background: rgba(255,255,255,0.1);
+      border: none;
+      border-radius: 50%;
+      color: #fff;
+      font-size: 22px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: background 0.2s;
+      z-index: 10;
+    }
+
+    .lightbox-close:hover {
+      background: rgba(255,255,255,0.25);
+    }
+
+    .lightbox-hint {
+      position: absolute;
+      bottom: 28px;
+      left: 50%;
+      transform: translateX(-50%);
+      color: rgba(255,255,255,0.55);
+      font-size: 13px;
+      pointer-events: none;
+      transition: opacity 0.3s ease;
     }
 
     /* ─── Blog Posts ─── */
@@ -407,9 +498,21 @@
       flex-direction: column;
       flex: 1;
     }
+
+    /* ─── Body scroll lock during lightbox ─── */
+    body.lightbox-open {
+      overflow: hidden;
+    }
   </style>
 </head>
 <body>
+
+<!-- ══════════════ LIGHTBOX ══════════════ -->
+<div class="lightbox" id="lightbox">
+  <button class="lightbox-close" id="lightbox-close">&times;</button>
+  <img class="lightbox-img" id="lightbox-img" src="" alt="">
+  <div class="lightbox-hint" id="lightbox-hint">Click image to toggle actual size / fit to screen</div>
+</div>
 
 <div class="wrapper">
 
@@ -439,25 +542,47 @@
       <div class="section-title">Photography</div>
       <div class="columns">
         <div class="column">
-          <div class="photo-placeholder" style="height:480px;background:linear-gradient(180deg,#334D66,#6699CC);;;"></div>
-          <div class="photo-placeholder" style="height:400px;background:url('https://raw.githubusercontent.com/felixli2021/felixli2021.github.io/main/images/photo-1781262744772-u74u.jpg');background-size:cover;"></div>
+          <div class="photo-card" style="height:480px">
+            <div style="width:100%;height:100%;background:linear-gradient(180deg,#334D66,#6699CC);display:flex;align-items:center;justify-content:center;color:rgba(255,255,255,0.5);font-size:14px">Photo 1</div>
+          </div>
+          <div class="photo-card" style="height:320px">
+            <div style="width:100%;height:100%;background:linear-gradient(180deg,#804D33,#CC9966);display:flex;align-items:center;justify-content:center;color:rgba(255,255,255,0.5);font-size:14px">Photo 2</div>
+          </div>
+          <div class="photo-card" style="height:400px">
+            <div style="width:100%;height:100%;background:linear-gradient(180deg,#4D804D,#99CC99);display:flex;align-items:center;justify-content:center;color:rgba(255,255,255,0.5);font-size:14px">Photo 3</div>
+          </div>
         </div>
         <div class="column">
-          <div class="photo-placeholder" style="height:360px;background:linear-gradient(180deg,#99334D,#CC6699);;;"></div>
-          <div class="photo-placeholder" style="height:400px;background:url('https://raw.githubusercontent.com/felixli2021/felixli2021.github.io/main/images/photo-1781262748121-frhd.jpg');background-size:cover;"></div>
+          <div class="photo-card" style="height:360px">
+            <div style="width:100%;height:100%;background:linear-gradient(180deg,#99334D,#CC6699);display:flex;align-items:center;justify-content:center;color:rgba(255,255,255,0.5);font-size:14px">Photo 4</div>
+          </div>
+          <div class="photo-card" style="height:500px">
+            <div style="width:100%;height:100%;background:linear-gradient(180deg,#1A3366,#4D80B3);display:flex;align-items:center;justify-content:center;color:rgba(255,255,255,0.5);font-size:14px">Photo 5</div>
+          </div>
+          <div class="photo-card" style="height:280px">
+            <div style="width:100%;height:100%;background:linear-gradient(180deg,#B3B333,#E6E666);display:flex;align-items:center;justify-content:center;color:rgba(255,255,255,0.5);font-size:14px">Photo 6</div>
+          </div>
         </div>
         <div class="column">
-          <div class="photo-placeholder" style="height:300px;background:linear-gradient(180deg,#661A33,#B34D80);;;"></div>
+          <div class="photo-card" style="height:300px">
+            <div style="width:100%;height:100%;background:linear-gradient(180deg,#661A33,#B34D80);display:flex;align-items:center;justify-content:center;color:rgba(255,255,255,0.5);font-size:14px">Photo 7</div>
+          </div>
+          <div class="photo-card" style="height:440px">
+            <div style="width:100%;height:100%;background:linear-gradient(180deg,#338080,#66CCB3);display:flex;align-items:center;justify-content:center;color:rgba(255,255,255,0.5);font-size:14px">Photo 8</div>
+          </div>
+          <div class="photo-card" style="height:350px">
+            <div style="width:100%;height:100%;background:linear-gradient(180deg,#806633,#CCB380);display:flex;align-items:center;justify-content:center;color:rgba(255,255,255,0.5);font-size:14px">Photo 9</div>
+          </div>
         </div>
       </div>
     </div>
 
     <div class="footer">
+      <span>© 2026 Felix Li</span>
       <div class="footer-links">
         <a href="#">RSS</a>
         <a href="#">GitHub</a>
       </div>
-      <span>© 2026 Felix Li</span>
     </div>
   </div>
 
@@ -478,7 +603,6 @@
     </div>
 
     <div class="posts-section">
-      <!-- 2026 -->
       <div class="year-label">2026</div>
       <div class="year-separator"></div>
       <div class="post-item">
@@ -497,7 +621,6 @@
         <span class="post-meta">10 min</span>
       </div>
 
-      <!-- 2025 -->
       <div class="year-label">2025</div>
       <div class="year-separator"></div>
       <div class="post-item">
@@ -511,7 +634,6 @@
         <span class="post-meta">9 min</span>
       </div>
 
-      <!-- 2024 -->
       <div class="year-label">2024</div>
       <div class="year-separator"></div>
       <div class="post-item">
@@ -593,18 +715,92 @@
       link.addEventListener('click', () => switchPage(link.dataset.page));
     });
 
-    // ─── Keyboard Navigation ───
     const pageOrder = ['photos', 'blog', 'about'];
     document.addEventListener('keydown', (e) => {
+      if (document.body.classList.contains('lightbox-open')) return;
       if (e.key === 'ArrowRight' || e.key === 'ArrowDown') {
         const current = pageOrder.findIndex(p => pages[p].classList.contains('active'));
-        const next = (current + 1) % pageOrder.length;
-        switchPage(pageOrder[next]);
+        switchPage(pageOrder[(current + 1) % pageOrder.length]);
       } else if (e.key === 'ArrowLeft' || e.key === 'ArrowUp') {
         const current = pageOrder.findIndex(p => pages[p].classList.contains('active'));
-        const prev = (current - 1 + pageOrder.length) % pageOrder.length;
-        switchPage(pageOrder[prev]);
+        switchPage(pageOrder[(current - 1 + pageOrder.length) % pageOrder.length]);
       }
+    });
+
+    // ─── Lightbox ───
+    const lightbox = document.getElementById('lightbox');
+    const lightboxImg = document.getElementById('lightbox-img');
+    const lightboxClose = document.getElementById('lightbox-close');
+    const lightboxHint = document.getElementById('lightbox-hint');
+
+    let isActual = false;
+
+    function openLightbox(imgSrc) {
+      if (!imgSrc) return;
+      lightboxImg.src = imgSrc;
+      lightboxImg.classList.remove('actual');
+      isActual = false;
+      lightboxHint.textContent = 'Click image to see actual size';
+      lightboxHint.style.opacity = '1';
+      lightbox.classList.add('open');
+      document.body.classList.add('lightbox-open');
+    }
+
+    function closeLightbox() {
+      lightbox.classList.remove('open');
+      document.body.classList.remove('lightbox-open');
+      setTimeout(() => { lightboxImg.src = ''; }, 300);
+    }
+
+    function toggleActualSize() {
+      isActual = !isActual;
+      if (isActual) {
+        lightboxImg.classList.add('actual');
+        lightboxHint.textContent = 'Scroll to pan · Click to fit screen';
+      } else {
+        lightboxImg.classList.remove('actual');
+        lightboxHint.textContent = 'Click image to see actual size';
+      }
+    }
+
+    // Click on photo cards
+    document.addEventListener('click', (e) => {
+      const card = e.target.closest('.photo-card');
+      if (!card) return;
+      const img = card.querySelector('img');
+      if (img && img.src) {
+        openLightbox(img.src);
+      }
+    });
+
+    // Lightbox interactions
+    lightboxClose.addEventListener('click', (e) => {
+      e.stopPropagation();
+      closeLightbox();
+    });
+
+    lightbox.addEventListener('click', (e) => {
+      if (e.target === lightbox || e.target === lightboxClose) {
+        closeLightbox();
+      }
+    });
+
+    lightboxImg.addEventListener('click', (e) => {
+      e.stopPropagation();
+      toggleActualSize();
+    });
+
+    document.addEventListener('keydown', (e) => {
+      if (!document.body.classList.contains('lightbox-open')) return;
+      if (e.key === 'Escape') closeLightbox();
+    });
+
+    // Auto-hide hint after 3 seconds
+    let hintTimer;
+    lightbox.addEventListener('mousemove', () => {
+      lightboxHint.style.opacity = '1';
+      clearTimeout(hintTimer);
+      hintTimer = setTimeout(() => { lightboxHint.style.opacity = '0'; }, 3000);
     });
   })();
 </script>
