@@ -1,0 +1,525 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Felix Li — Photography & Blog</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Archivo:wght@700&family=Space+Grotesk:wght@400;500;600&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #FFFFFF;
+      --bg-footer: #F9FAFA;
+      --text-primary: #09090B;
+      --text-secondary: #64748B;
+      --text-body: #3F3F46;
+      --accent: #2563EB;
+      --separator: #E4E4E8;
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    html, body {
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+      background: #0a0a0a;
+      font-family: 'Space Grotesk', sans-serif;
+      font-weight: 400;
+      color: var(--text-primary);
+      -webkit-font-smoothing: antialiased;
+    }
+
+    .frame {
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      transform-origin: top left;
+      width: 1440px;
+      height: auto;
+      background: var(--bg);
+      overflow: visible;
+    }
+
+    /* ─── Header ─── */
+    .header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      height: 64px;
+      padding: 0 64px;
+      background: var(--bg);
+    }
+
+    .logo {
+      font-family: 'Archivo', sans-serif;
+      font-weight: 700;
+      font-size: 20px;
+      color: var(--text-primary);
+    }
+
+    .nav {
+      display: flex;
+      gap: 32px;
+    }
+
+    .nav a {
+      font-size: 14px;
+      color: var(--text-secondary);
+      text-decoration: none;
+      transition: color 0.2s;
+      cursor: pointer;
+    }
+
+    .nav a.active {
+      color: var(--text-primary);
+      font-weight: 500;
+    }
+
+    .nav a:hover {
+      color: var(--text-primary);
+    }
+
+    .rss-icon {
+      width: 18px;
+      height: 18px;
+      flex-shrink: 0;
+      cursor: pointer;
+      transition: opacity 0.2s;
+    }
+
+    .rss-icon:hover { opacity: 0.7; }
+
+    /* ─── Hero ─── */
+    .hero {
+      padding: 80px 64px 40px;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    .hero-title {
+      font-family: 'Archivo', sans-serif;
+      font-weight: 700;
+      font-size: 48px;
+      color: var(--text-primary);
+      line-height: 1.1;
+    }
+
+    .hero-subtitle {
+      font-size: 16px;
+      color: var(--text-secondary);
+    }
+
+    .hero-desc {
+      font-size: 15px;
+      color: var(--text-body);
+      max-width: 560px;
+      line-height: 1.6;
+    }
+
+    /* ─── Gallery ─── */
+    .gallery-section {
+      padding: 40px 64px 80px;
+      display: flex;
+      flex-direction: column;
+      gap: 32px;
+    }
+
+    .section-title {
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--text-secondary);
+      text-transform: uppercase;
+      letter-spacing: 2px;
+    }
+
+    .columns {
+      display: flex;
+      gap: 24px;
+    }
+
+    .column {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      gap: 24px;
+    }
+
+    .photo-placeholder {
+      width: 100%;
+      background-size: cover;
+      background-position: center;
+      border-radius: 0;
+      transition: transform 0.3s ease, opacity 0.3s ease;
+      cursor: pointer;
+    }
+
+    .photo-placeholder:hover {
+      transform: scale(1.02);
+      opacity: 0.9;
+    }
+
+    /* ─── Blog Posts ─── */
+    .posts-section {
+      padding: 60px 64px 80px;
+      display: flex;
+      flex-direction: column;
+      gap: 48px;
+    }
+
+    .year-label {
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--text-primary);
+    }
+
+    .year-separator {
+      height: 1px;
+      background: var(--separator);
+      margin: -44px 0 -44px;
+    }
+
+    .post-item {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      cursor: pointer;
+      transition: opacity 0.2s;
+    }
+
+    .post-item:hover { opacity: 0.7; }
+
+    .post-date {
+      font-size: 14px;
+      color: var(--text-secondary);
+      width: 100px;
+      flex-shrink: 0;
+    }
+
+    .post-title {
+      font-size: 15px;
+      font-weight: 500;
+      color: var(--text-primary);
+      flex: 1;
+    }
+
+    .post-meta {
+      font-size: 13px;
+      color: var(--text-secondary);
+      width: 60px;
+      flex-shrink: 0;
+      text-align: right;
+    }
+
+    /* ─── About ─── */
+    .about-body {
+      display: flex;
+      align-items: center;
+      padding: 80px 64px;
+      gap: 80px;
+    }
+
+    .avatar-frame {
+      width: 280px;
+      height: 360px;
+      flex-shrink: 0;
+      background: linear-gradient(135deg, #334D66, #8099B3);
+    }
+
+    .bio {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+    }
+
+    .bio-title {
+      font-family: 'Archivo', sans-serif;
+      font-weight: 700;
+      font-size: 28px;
+      color: var(--text-primary);
+    }
+
+    .bio-text {
+      font-size: 15px;
+      color: var(--text-body);
+      line-height: 26px;
+      white-space: pre-line;
+    }
+
+    .contact-title {
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--text-secondary);
+      text-transform: uppercase;
+      letter-spacing: 2px;
+    }
+
+    .contact-link {
+      font-size: 14px;
+      color: var(--accent);
+      text-decoration: none;
+    }
+
+    .contact-link:hover { text-decoration: underline; }
+
+    /* ─── Footer ─── */
+    .footer {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      height: auto;
+      padding: 32px 64px;
+      background: var(--bg-footer);
+      font-size: 13px;
+      color: var(--text-secondary);
+    }
+
+    .footer-links {
+      display: flex;
+      gap: 24px;
+    }
+
+    .footer-links a {
+      color: var(--text-secondary);
+      text-decoration: none;
+      transition: color 0.2s;
+    }
+
+    .footer-links a:hover { color: var(--text-primary); }
+
+    /* ─── Page Visibility ─── */
+    .page {
+      display: none;
+    }
+
+    .page.active {
+      display: block;
+    }
+  </style>
+</head>
+<body>
+
+<div class="frame" id="designFrame">
+
+  <!-- ══════════════ PHOTOS PAGE ══════════════ -->
+  <div class="page active" id="page-photos">
+    <div class="header">
+      <span class="logo">Felix</span>
+      <div class="nav">
+        <a class="active" data-page="photos">Photos</a>
+        <a data-page="blog">Blog</a>
+        <a data-page="about">About</a>
+      </div>
+      <svg class="rss-icon" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path d="M4 11a9 9 0 019 9" stroke="#09090B" stroke-width="2" stroke-linecap="round"/>
+        <path d="M4 4a16 16 0 0116 16" stroke="#09090B" stroke-width="2" stroke-linecap="round"/>
+        <circle cx="6" cy="18" r="2" fill="#09090B"/>
+      </svg>
+    </div>
+
+    <div class="hero">
+      <div class="hero-title">Felix Li</div>
+      <div class="hero-subtitle">Photography · Wuhan, China</div>
+      <div class="hero-desc">A personal photography collection and blog. Capturing moments, places, and stories through the lens.</div>
+    </div>
+
+    <div class="gallery-section">
+      <div class="section-title">Photography</div>
+      <div class="columns">
+        <div class="column">
+          <div class="photo-placeholder" style="height:480px;background:linear-gradient(180deg,#334D66,#6699CC);"></div>
+          <div class="photo-placeholder" style="height:320px;background:linear-gradient(180deg,#804D33,#CC9966);"></div>
+          <div class="photo-placeholder" style="height:400px;background:linear-gradient(180deg,#4D804D,#99CC99);"></div>
+        </div>
+        <div class="column">
+          <div class="photo-placeholder" style="height:360px;background:linear-gradient(180deg,#99334D,#CC6699);"></div>
+          <div class="photo-placeholder" style="height:500px;background:linear-gradient(180deg,#1A3366,#4D80B3);"></div>
+          <div class="photo-placeholder" style="height:280px;background:linear-gradient(180deg,#B3B333,#E6E666);"></div>
+        </div>
+        <div class="column">
+          <div class="photo-placeholder" style="height:300px;background:linear-gradient(180deg,#661A33,#B34D80);"></div>
+          <div class="photo-placeholder" style="height:440px;background:linear-gradient(180deg,#338080,#66CCB3);"></div>
+          <div class="photo-placeholder" style="height:350px;background:linear-gradient(180deg,#806633,#CCB380);"></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="footer">
+      <div class="footer-links">
+        <a href="#">RSS</a>
+        <a href="#">GitHub</a>
+      </div>
+      <span>© 2026 Felix Li</span>
+    </div>
+  </div>
+
+  <!-- ══════════════ BLOG PAGE ══════════════ -->
+  <div class="page" id="page-blog">
+    <div class="header">
+      <span class="logo">Felix</span>
+      <div class="nav">
+        <a data-page="photos">Photos</a>
+        <a class="active" data-page="blog">Blog</a>
+        <a data-page="about">About</a>
+      </div>
+      <svg class="rss-icon" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path d="M4 11a9 9 0 019 9" stroke="#09090B" stroke-width="2" stroke-linecap="round"/>
+        <path d="M4 4a16 16 0 0116 16" stroke="#09090B" stroke-width="2" stroke-linecap="round"/>
+        <circle cx="6" cy="18" r="2" fill="#09090B"/>
+      </svg>
+    </div>
+
+    <div class="posts-section">
+      <!-- 2026 -->
+      <div class="year-label">2026</div>
+      <div class="year-separator"></div>
+      <div class="post-item">
+        <span class="post-date">Jun 11</span>
+        <span class="post-title">武汉长江大桥夜拍手记</span>
+        <span class="post-meta">6 min</span>
+      </div>
+      <div class="post-item">
+        <span class="post-date">May 20</span>
+        <span class="post-title">春日东湖·樱花园人像拍摄</span>
+        <span class="post-meta">8 min</span>
+      </div>
+      <div class="post-item">
+        <span class="post-date">Mar 08</span>
+        <span class="post-title">胶片感调色思考：在 Lightroom 里还原心境</span>
+        <span class="post-meta">10 min</span>
+      </div>
+
+      <!-- 2025 -->
+      <div class="year-label">2025</div>
+      <div class="year-separator"></div>
+      <div class="post-item">
+        <span class="post-date">Dec 15</span>
+        <span class="post-title">用 Sony A7R5 拍武汉初雪</span>
+        <span class="post-meta">12 min</span>
+      </div>
+      <div class="post-item">
+        <span class="post-date">Aug 03</span>
+        <span class="post-title">后期思路：让照片有温度而不是精度的游戏</span>
+        <span class="post-meta">9 min</span>
+      </div>
+
+      <!-- 2024 -->
+      <div class="year-label">2024</div>
+      <div class="year-separator"></div>
+      <div class="post-item">
+        <span class="post-date">Nov 22</span>
+        <span class="post-title">关于这支镜头的抉择：35mm vs 50mm</span>
+        <span class="post-meta">7 min</span>
+      </div>
+    </div>
+
+    <div class="footer">
+      <span>© 2026 Felix Li</span>
+      <div class="footer-links">
+        <a href="#">RSS</a>
+        <a href="#">GitHub</a>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════════ ABOUT PAGE ══════════════ -->
+  <div class="page" id="page-about">
+    <div class="header">
+      <span class="logo">Felix</span>
+      <div class="nav">
+        <a data-page="photos">Photos</a>
+        <a data-page="blog">Blog</a>
+        <a class="active" data-page="about">About</a>
+      </div>
+      <svg class="rss-icon" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path d="M4 11a9 9 0 019 9" stroke="#09090B" stroke-width="2" stroke-linecap="round"/>
+        <path d="M4 4a16 16 0 0116 16" stroke="#09090B" stroke-width="2" stroke-linecap="round"/>
+        <circle cx="6" cy="18" r="2" fill="#09090B"/>
+      </svg>
+    </div>
+
+    <div class="about-body">
+      <div class="avatar-frame"></div>
+      <div class="bio">
+        <div class="bio-title">About Me</div>
+        <div class="bio-text">我是 Felix，住在武汉的摄影爱好者。白天是软件工程师，夜晚和周末拿着相机在城市里游荡。这个站点是我记录照片和思考的地方。
+
+器材：Sony A7R5 + 35mm f/1.4</div>
+        <div class="contact-title">Contact</div>
+        <a class="contact-link" href="mailto:felix@felixli.com">felix@felixli.com</a>
+      </div>
+    </div>
+
+    <div class="footer">
+      <span>© 2026 Felix Li</span>
+      <div class="footer-links">
+        <a href="#">RSS</a>
+        <a href="#">GitHub</a>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+  (function() {
+    const frame = document.getElementById('designFrame');
+    const DESKTOP_WIDTH = 1440;
+    const DESKTOP_HEIGHT = 900;
+
+    // ─── Responsive Scaling ───
+    function scaleFrame() {
+      const scale = Math.min(window.innerWidth / DESKTOP_WIDTH, window.innerHeight / DESKTOP_HEIGHT);
+      const offsetX = (window.innerWidth - DESKTOP_WIDTH * scale) / 2;
+      const offsetY = (window.innerHeight - DESKTOP_HEIGHT * scale) / 2;
+      frame.style.transform = `scale(${scale}) translate(${offsetX / scale}px, ${offsetY / scale}px)`;
+    }
+
+    window.addEventListener('resize', scaleFrame);
+    scaleFrame();
+
+    // ─── Page Navigation ───
+    const pages = {
+      photos: document.getElementById('page-photos'),
+      blog: document.getElementById('page-blog'),
+      about: document.getElementById('page-about'),
+    };
+
+    function switchPage(name) {
+      Object.values(pages).forEach(p => p.classList.remove('active'));
+      pages[name].classList.add('active');
+
+      // Update all nav links across all pages
+      document.querySelectorAll('.nav a').forEach(link => {
+        link.classList.toggle('active', link.dataset.page === name);
+      });
+
+      // Scroll to top
+      window.scrollTo({ top: 0 });
+    }
+
+    document.querySelectorAll('.nav a').forEach(link => {
+      link.addEventListener('click', () => switchPage(link.dataset.page));
+    });
+
+    // ─── Keyboard Navigation ───
+    const pageOrder = ['photos', 'blog', 'about'];
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'ArrowRight' || e.key === 'ArrowDown') {
+        const current = pageOrder.findIndex(p => pages[p].classList.contains('active'));
+        const next = (current + 1) % pageOrder.length;
+        switchPage(pageOrder[next]);
+      } else if (e.key === 'ArrowLeft' || e.key === 'ArrowUp') {
+        const current = pageOrder.findIndex(p => pages[p].classList.contains('active'));
+        const prev = (current - 1 + pageOrder.length) % pageOrder.length;
+        switchPage(pageOrder[prev]);
+      }
+    });
+  })();
+</script>
+
+</body>
+</html>
